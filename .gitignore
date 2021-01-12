@@ -1,0 +1,10 @@
+__pycache__
+Mordhau.log
+doc
+discord.log
+config
+db
+.git-app-password
+test
+queue.json
+asyncex1.py
