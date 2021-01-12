@@ -46,7 +46,7 @@ class MyClient(discord.Client):
 
 	def _load_queue(self):
 		tmp_queue = fileio.load_queue()
-		new_queue = fileio.load_queue()
+		new_queue = asyncio.PriorityQueue()
 		#we need to convert channel ids into channel objects
 		while 1:
 			try:

@@ -2,11 +2,11 @@ import re
 import io
 
 timestamp_pattern 	= re.compile("\[\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3}\]")
-ban_pattern 		= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauPlayerController: Display: Admin (.*) \((.*)\) banned player (.*) \(Duration: (\d*), Reason: (.*)\)\n")
-kick_pattern 		= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauPlayerController: Display: Admin (.*) \((.*)\) kicked player (.*) \(Reason: (.*)\)\n")
-kickban_pattern 	= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauGameSession: Kicked player (.*) \((.*)\), reason: (.*)\n")
-unban_pattern 		= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauPlayerController: Display: Admin (.*) \((.*)\) unbanned player (.*)\n")
-chat_pattern 		= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogGameMode: Display: \((.*)\) (.*), (.*): \"(.*)\"")
+ban_pattern 		= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauPlayerController: Display: Admin (.*) \((.*)\) banned player (.*) \(Duration: (\d*), Reason: (.*)\)(\n|$)")
+kick_pattern 		= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauPlayerController: Display: Admin (.*) \((.*)\) kicked player (.*) \(Reason: (.*)\)(\n|$)")
+kickban_pattern 	= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauGameSession: Kicked player (.*) \((.*)\), reason: (.*)(\n|$)")
+unban_pattern 		= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauPlayerController: Display: Admin (.*) \((.*)\) unbanned player (.*)(\n|$)")
+chat_pattern 		= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogGameMode: Display: \((.*)\) (.*), (.*): \"(.*)\"(\n|$)")
 #calculates the novel part of the new log file
 def log_diff(old_data, data):
 	#passthrough if no old_data
@@ -84,7 +84,12 @@ def match_unban(line):
 def match_chat(line):
 	return chat_pattern.match(line)
 
-async def parse_lines(data, callback=None):
+async def parse_lines(data, db, callback=None):
+	"""loops through every line in the log and determines its type, formats the log msg then calls callback on it
+
+	data - the log data to loop over, string
+	db - a mydb object to assist with playfabid->discordid resoltion
+	callback - a function that gets called on each log message. takes two arguments, logmsg string and type string"""
 	buf = io.StringIO(data)
 	line = "True"
 	match = None
@@ -101,7 +106,11 @@ async def parse_lines(data, callback=None):
 			res = format_ban(match)
 			(timestamp, adm_name, adm_playfabid, plyr_playfabid, duration, reason) = res
 			name_guess = guess_name(data, plyr_playfabid)
-			logmsg = "Logging ban: [{}] {} ({}) banned player {} ({}) for {}s (Reason: {}) ".format(timestamp, adm_name, adm_playfabid, name_guess, plyr_playfabid, duration, reason)
+			#resolve discordid from playfabid
+			adm_discordid = db.get_discordid_from_playfabid(adm_playfabid)
+			adm_mention = ""
+			adm_mention = adm_discordid and f"<@{adm_discordid}>"
+			logmsg = "Logging ban: [{}] {} {} ({}) banned player {} ({}) for {}s (Reason: {}) ".format(timestamp, adm_mention, adm_name, adm_playfabid, name_guess, plyr_playfabid, duration, reason)
 			print(logmsg)
 			callback and await callback(logmsg, "ban")
 			continue
@@ -109,7 +118,10 @@ async def parse_lines(data, callback=None):
 			res = format_kick(match)
 			(timestamp, adm_name, adm_playfabid, plyr_playfabid, reason) = res
 			name_guess = guess_name(data, plyr_playfabid)
-			logmsg = "Logging kick: [{}] {} ({}) kicked player {} ({}) (Reason: {})".format(timestamp, adm_name, adm_playfabid, name_guess, plyr_playfabid, reason)
+			adm_discordid = db.get_discordid_from_playfabid(adm_playfabid)
+			adm_mention = ""
+			adm_mention = adm_discordid and f"<@{adm_discordid}>"
+			logmsg = "Logging kick: [{}] {} {} ({}) kicked player {} ({}) (Reason: {})".format(timestamp, adm_mention, adm_name, adm_playfabid, name_guess, plyr_playfabid, reason)
 			print(logmsg)
 			callback and await callback(logmsg, "kick")
 			continue
@@ -117,15 +129,22 @@ async def parse_lines(data, callback=None):
 			res = format_unban(match)
 			(timestamp, adm_name, adm_playfabid, plyr_playfabid) = res
 			name_guess = guess_name(data, plyr_playfabid)
-			logmsg = "Logging unban: [{}] {} ({}) unbanned player {} ({})".format(timestamp, adm_name, adm_playfabid, name_guess, plyr_playfabid)
+			adm_discordid = db.get_discordid_from_playfabid(adm_playfabid)
+			adm_mention = ""
+			adm_mention = adm_discordid and f"<@{adm_discordid}>"
+			logmsg = "Logging unban: [{}] {} {} ({}) unbanned player {} ({})".format(timestamp, adm_mention, adm_name, adm_playfabid, name_guess, plyr_playfabid)
 			print(logmsg)
 			callback and await callback(logmsg, "unban")
 			continue
 
-if __name__ == '__main__':
+async def main():
+	import mydb
+	mydb = mydb.db()
 	data = ""
-	with open("test.log", "r") as fp:
+	with open("test/test4.log", "r") as fp:
 		data = fp.read()
-	#parse_bans(data)
-	#parse_kicks(data)
-	parse_lines(data)
+	await parse_lines(data, mydb)
+
+if __name__ == '__main__':
+	import asyncio
+	asyncio.run(main())

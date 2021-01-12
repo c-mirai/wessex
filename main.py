@@ -5,8 +5,10 @@ import fileio
 import time
 import asyncio
 import discordio
+import mydb
 
 async def main_loop(client):
+	DB = mydb.db()
 	await client.wait_until_ready()
 
 	#config structures (for convenience)
@@ -48,9 +50,9 @@ async def main_loop(client):
 			nonlocal client
 			if channel_flags[msgtype]:
 				#printf("waiting")
-				await client.send_msg(logmsg, channels[msgtype],msgtype_priorities[msgtype])
+				await client.send_msg(logmsg, channels[msgtype], msgtype_priorities[msgtype])
 
-		await logparse.parse_lines(new_data, send_logmsg)
+		await logparse.parse_lines(new_data, DB, send_logmsg)
 		#wait
 		interval = int(config.config['time']['interval'])
 		print("Waiting {} seconds".format(interval))

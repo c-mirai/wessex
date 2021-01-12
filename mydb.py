@@ -11,11 +11,15 @@ class db:
 		with open(config.config['db']['admins'], 'r') as fp:
 			self._admins = json.load(fp)
 		print("Loaded admins.")
-		print(self._admins)
 	def get_discordid_from_playfabid(self, playfabid):
 		#for efficiency we've indexed by playfabid
 		#not that it matters
-		return self._admins[playfabid]["discordid"]
+		discordid = ""
+		try:
+			discordid = self._admins[playfabid]["discordid"]
+		except KeyError:
+			return ""
+		return discordid
 
 
 def main():
