@@ -21,7 +21,7 @@ def save_queue(queue):
 	while 1:
 		try:
 			item = queue.get_nowait()
-			data.append(json.dumps(item))
+			data.append(item)
 		except asyncio.QueueEmpty:
 			break
 	with open(fname, 'w+') as fp:
@@ -32,8 +32,9 @@ def load_queue():
 	"""Reconstitutes the queue saved by save_queue"""
 	fname = config.config["fileio"]["queue"]
 	data = []
-	with open(fname, "w+") as fp:
+	with open(fname, "r+") as fp:
 		strdata = fp.read()
+		#print(strdata)
 		if strdata:
 			data = json.loads(strdata)
 	if not data:

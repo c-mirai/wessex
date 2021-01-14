@@ -25,9 +25,11 @@ class MyClient(discord.Client):
 		super().__init__(*args, **kwargs)
 		#Discord message rate limit (seconds per message)
 		import atexit
+		global __name__
 		atexit.register(self._save_queue)
 		self._msg_ratelimit = 60/120
-		self._msg_queue = self._load_queue()
+		self._msg_queue = asyncio.PriorityQueue()
+		self._msg_queue_loaded = asyncio.Event()
 		#load_queue loads channels as ids. we have to convert them to channels
 		self.loop.create_task(self._process_msg_loop())
 
@@ -44,26 +46,31 @@ class MyClient(discord.Client):
 				break
 		fileio.save_queue(tmp_queue)
 
-	def _load_queue(self):
+	async def _load_queue(self):
 		tmp_queue = fileio.load_queue()
 		new_queue = asyncio.PriorityQueue()
 		#we need to convert channel ids into channel objects
+		Item = None
 		while 1:
 			try:
 				item = tmp_queue.get_nowait()
-				(priority, (msg, channelid)) = item
-				item = (priority, (msg, self.get_channel(channelid)))
-				new_queue.put_nowait(item)
 			except asyncio.QueueEmpty:
 				break
+			print(repr(item))
+			print(item[0])
+			(priority, (msg, channelid)) = item
+			item = (int(priority), (msg, self.get_channel(channelid)))
+			await new_queue.put(item)
 		return new_queue
 
 	async def _process_msg_loop(self):
-		await self.wait_until_ready()
-
+		#await self.wait_until_ready()
+		#wait for the message queue loaded event
+		await self._msg_queue_loaded.wait()
 		while not self.is_closed():
 			msg = await self._msg_queue.get()
 			await msg[1][1].send(msg[1][0])
+			print("sending {}".format(msg[1][0]))
 			self._msg_queue.task_done()
 			await asyncio.sleep(self._msg_ratelimit)
 
@@ -71,6 +78,9 @@ class MyClient(discord.Client):
 		self.bg_loop = self.loop.create_task(loop(self))
 
 	async def on_ready(self):
+		#this needs to be done here so that get_channel can resolve the channel ids
+		self._msg_queue = await self._load_queue()
+		self._msg_queue_loaded.set()
 		client = self
 		#test
 		channel = client.get_channel(798198029919322122)
@@ -78,8 +88,8 @@ class MyClient(discord.Client):
 		print(f"{client.user} is connected to the following guilds:")
 		for guild in client.guilds:
 			print(f"{guild.name} (id: {guild.id})")
-		members = '\n - '.join([f"{member.name} ({member.id})"  for member in guild.members])
-		print(f'Guild Members:\n - {members}')
+		#members = '\n - '.join([f"{member.name} ({member.id})"  for member in guild.members])
+		#print(f'Guild Members:\n - {members}')
 
 		#meme section
 		#channel = self.get_channel(798277528916590662)
@@ -95,11 +105,23 @@ class MyClient(discord.Client):
 
 	async def send_msg(self, msg, channel, priority=2):
 		"""Adds a message to the message queue, to be sent at a rate that complies with discord's rate limit."""
-		await self._msg_queue.put((priority, (msg,channel)))
+		print((priority, (msg, channel)))
+		await self._msg_queue.put((priority, (msg, channel)))
+
+async def main_loop(client):
+	#await client.wait_until_ready()
+	await client._msg_queue_loaded.wait()
+	#while not client.is_closed():
+	#print(client._msg_queue)
+	# test_channel = client.get_channel(798198029919322122)
+	# for i in range(10):
+	# 	await client.send_msg(f"test{i}", test_channel)
+	# print("test messages sent")
 
 
 def main():
 	client = MyClient(intents=intents)
+	client.set_loop(main_loop)
 	client.run(TOKEN)
 
 if __name__ == '__main__':
