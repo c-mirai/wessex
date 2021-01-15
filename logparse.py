@@ -1,7 +1,9 @@
 import re
 import io
+import datetime
 
 timestamp_pattern 	= re.compile("\[\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3}\]")
+microsecond_pattern = re.compile(":(\d{3})\]")
 ban_pattern 		= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauPlayerController: Display: Admin (.*) \((.*)\) banned player (.*) \(Duration: (\d*), Reason: (.*)\)(\n|$)")
 kick_pattern 		= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauPlayerController: Display: Admin (.*) \((.*)\) kicked player (.*) \(Reason: (.*)\)(\n|$)")
 kickban_pattern 	= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauGameSession: Kicked player (.*) \((.*)\), reason: (.*)(\n|$)")
@@ -30,6 +32,13 @@ def log_diff(old_data, data):
 		print("Head mismatch detected; all data is new.")
 		new_data = data
 	return new_data
+
+def timestamp_to_datetime(timestamp):
+	#[2021.01.09-22.17.01:079]
+	#"%Y.%m.%d-%H.%M.%S:%f"
+	#dt = datetime.datetime()
+	dt = datetime.datetime.strptime(timestamp, "%Y.%m.%d-%H.%M.%S:%f")
+	return dt
 
 #tries to associate a player name with a playfabid
 #certain playernames or log truncation can cause this to return incorrect results
@@ -110,7 +119,7 @@ async def parse_lines(data, db, callback=None):
 			adm_discordid = db.get_discordid_from_playfabid(adm_playfabid)
 			adm_mention = ""
 			adm_mention = adm_discordid and f"<@{adm_discordid}>"
-			logmsg = "Logging ban: [{}] {} {} ({}) banned player {} ({}) for {}s (Reason: {}) ".format(timestamp, adm_mention, adm_name, adm_playfabid, name_guess, plyr_playfabid, duration, reason)
+			logmsg = "Logging ban: [{}] {} {} ({}) banned player {} ({}) for {}m (Reason: {}) ".format(timestamp, adm_mention, adm_name, adm_playfabid, name_guess, plyr_playfabid, duration, reason)
 			print(logmsg)
 			callback and await callback(logmsg, "ban")
 			continue
@@ -141,9 +150,10 @@ async def main():
 	import mydb
 	mydb = mydb.db()
 	data = ""
-	with open("test/test4.log", "r") as fp:
+	with open("test/test.log", "r") as fp:
 		data = fp.read()
 	await parse_lines(data, mydb)
+	print(timestamp_to_datetime("2021.01.09-22.17.01:079"))
 
 if __name__ == '__main__':
 	import asyncio

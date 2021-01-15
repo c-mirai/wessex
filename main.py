@@ -9,7 +9,8 @@ import mydb
 
 async def main_loop(client):
 	DB = mydb.db()
-	await client.wait_until_ready()
+	#await client.wait_until_ready()
+	await client._msg_queue_loaded.wait()
 
 	#config structures (for convenience)
 	channels = {
@@ -25,10 +26,10 @@ async def main_loop(client):
 		"unban": config.log_unban,
 	}
 	msgtype_priorities = {
-		"chat": config.config["discord"]["chat_priority"],
-		"ban": config.config["discord"]["ban_priority"],
-		"kick": config.config["discord"]["kick_priority"],
-		"unban": config.config["discord"]["unban_priority"],
+		"chat": int(config.config["discord"]["chat_priority"]),
+		"ban": int(config.config["discord"]["ban_priority"]),
+		"kick": int(config.config["discord"]["kick_priority"]),
+		"unban": int(config.config["discord"]["unban_priority"]),
 	}
 
 	while not client.is_closed():

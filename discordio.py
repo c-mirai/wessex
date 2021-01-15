@@ -27,9 +27,10 @@ class MyClient(discord.Client):
 		import atexit
 		global __name__
 		atexit.register(self._save_queue)
-		self._msg_ratelimit = 60/120
+		self._msg_ratelimit = float(config.config['discord']['msg_ratelimit'])
 		self._msg_queue = asyncio.PriorityQueue()
 		self._msg_queue_loaded = asyncio.Event()
+		#this event signals when the message queue has been loaded and is able to start taking new messages
 		#load_queue loads channels as ids. we have to convert them to channels
 		self.loop.create_task(self._process_msg_loop())
 
@@ -69,8 +70,12 @@ class MyClient(discord.Client):
 		await self._msg_queue_loaded.wait()
 		while not self.is_closed():
 			msg = await self._msg_queue.get()
-			await msg[1][1].send(msg[1][0])
 			print("sending {}".format(msg[1][0]))
+			await msg[1][1].send(msg[1][0])
+			qsize = self._msg_queue.qsize()
+			if qsize % 10 == 1:
+				#print qsize every 10
+				print(f"Queue size: {qsize}")
 			self._msg_queue.task_done()
 			await asyncio.sleep(self._msg_ratelimit)
 
@@ -103,9 +108,9 @@ class MyClient(discord.Client):
 		print(type(message))
 		print(message.content)
 
-	async def send_msg(self, msg, channel, priority=2):
+	async def send_msg(self, msg, channel, priority=2, msgtype=""):
 		"""Adds a message to the message queue, to be sent at a rate that complies with discord's rate limit."""
-		print((priority, (msg, channel)))
+		#print((priority, (msg, channel)))
 		await self._msg_queue.put((priority, (msg, channel)))
 
 async def main_loop(client):
@@ -113,10 +118,11 @@ async def main_loop(client):
 	await client._msg_queue_loaded.wait()
 	#while not client.is_closed():
 	#print(client._msg_queue)
-	# test_channel = client.get_channel(798198029919322122)
-	# for i in range(10):
-	# 	await client.send_msg(f"test{i}", test_channel)
-	# print("test messages sent")
+	test_channel = client.get_channel(798198029919322122)
+	import random
+	for i in range(10):
+		await client.send_msg(f"test{random.randint(1,100)}", test_channel)
+	print("test messages sent")
 
 
 def main():
