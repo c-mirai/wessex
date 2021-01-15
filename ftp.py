@@ -13,6 +13,7 @@ def get_remote_file_text(host, port, usr, pwd, filepath):
 		pass
 	except:
 		logging.critical("Unexpected error in ftp")
+		raise
 	def read_line(line):
 		nonlocal data
 		data += line + '\n'
