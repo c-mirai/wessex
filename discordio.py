@@ -88,6 +88,7 @@ class MyClient(discord.Client):
 				self._msg_queue.task_done()
 			except asyncio.QueueEmpty:
 				#print("queue empty")
+				pass
 
 			await asyncio.sleep(self._msg_ratelimit)
 
