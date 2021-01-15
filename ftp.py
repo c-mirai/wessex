@@ -1,11 +1,18 @@
 from ftplib import FTP
 import sys
+import logging
 
 def get_remote_file_text(host, port, usr, pwd, filepath):
 	data = ""
 	ftp = FTP()
-	print(ftp.connect(host, port))
-	print(ftp.login(usr, pwd))
+	try:
+		print(ftp.connect(host, port))
+		print(ftp.login(usr, pwd))
+	except TimeoutError:
+		logging.warning(f"TimeoutError connecting to {host}:{port}")
+		pass
+	except:
+		logging.critical("Unexpected error in ftp")
 	def read_line(line):
 		nonlocal data
 		data += line + '\n'
