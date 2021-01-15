@@ -14,6 +14,13 @@ def update(fname, data):
 		fp.truncate()
 	return old_data
 
+def read(fname):
+	"""Load a file and return its contents as a string."""
+	data = ""
+	with open(fname, "r") as fp:
+		data = fp.read()
+	return data
+
 def save_queue(queue):
 	"""Saves an asyncio.PriorityQueue by creating a list of all items and then json.dump that to config.fileio.queue"""
 	fname = config.config["fileio"]["queue"]

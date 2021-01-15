@@ -6,7 +6,6 @@ import logging
 import asyncio
 import fileio
 
-
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)
 logfile = config.config['discord']['logfile']
@@ -119,8 +118,10 @@ class MyClient(discord.Client):
 		if message.author == client.user:
 			return
 
-		print(type(message))
 		print(message.content)
+
+		if message.content.startswith('$stats'):
+			await message.channel.send('Hello!')
 
 	async def send_msg(self, msg, channel, priority=2, msgtype=""):
 		"""Adds a message to the message queue, to be sent at a rate that complies with discord's rate limit."""
