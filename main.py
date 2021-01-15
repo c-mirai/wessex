@@ -51,7 +51,7 @@ async def main_loop(client):
 			nonlocal client
 			if channel_flags[msgtype]:
 				#printf("waiting")
-				await client.send_msg(logmsg, channels[msgtype], msgtype_priorities[msgtype])
+				await client.send_msg(logmsg, channels[msgtype], msgtype_priorities[msgtype], msgtype)
 
 		await logparse.parse_lines(new_data, DB, send_logmsg)
 		#wait

@@ -107,7 +107,7 @@ async def parse_lines(data, db, callback=None):
 		if match := match_chat(line):
 			res = format_chat(match)
 			(timestamp, mode, name, plyr_playfabid, msg) = res
-			logmsg = "Logging chat: [{}] ({}) {} ({}): {}".format(timestamp, mode, name, plyr_playfabid, msg)
+			logmsg = "[{}] ({}) {} ({}): {}".format(timestamp, mode, name, plyr_playfabid, msg)
 			print(logmsg)
 			callback and await callback(logmsg, "chat")
 			continue
