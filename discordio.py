@@ -5,6 +5,7 @@ import time
 import logging
 import asyncio
 import fileio
+from discord.ext import commands
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)
@@ -19,7 +20,7 @@ intents.members = True
 TOKEN = config.config["discord"]["token"]
 #GUILDS = config.read_array("discord.guilds","guilds")
 
-class MyClient(discord.Client):
+class MyClient(commands.Bot):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		#Discord message rate limit (seconds per message)
@@ -72,13 +73,13 @@ class MyClient(discord.Client):
 		await self._msg_queue_loaded.wait()
 		while not self.is_closed():
 			if self._chat_batch:
-				print(f"sending chat batch:{self._chat_batch}")
+				#print(f"sending chat batch:{self._chat_batch}")
 				await self.send_msg(self._chat_batch, self._chat_channel, int(config.config['discord']['chat_priority']))
 				self._chat_batch = ""
 
 			try:
 				msg = self._msg_queue.get_nowait()
-				print("sending {}".format(msg[1][0]))
+				#print("sending {}".format(msg[1][0]))
 				await msg[1][1].send(msg[1][0])
 				qsize = self._msg_queue.qsize()
 				if qsize % 10 == 1:
@@ -112,16 +113,6 @@ class MyClient(discord.Client):
 		#meme section
 		#channel = self.get_channel(798277528916590662)
 		#await channel.send("smh")
-
-	async def on_message(self, message):
-		client = self
-		if message.author == client.user:
-			return
-
-		print(message.content)
-
-		if message.content.startswith('$stats'):
-			await message.channel.send('Hello!')
 
 	async def send_msg(self, msg, channel, priority=2, msgtype=""):
 		"""Adds a message to the message queue, to be sent at a rate that complies with discord's rate limit."""

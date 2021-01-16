@@ -7,13 +7,15 @@ import asyncio
 import discordio
 import mydb
 import serverstatus
+import command
 
 async def main_loop(client):
 	DB = mydb.db()
 	SS = serverstatus.ServerStatus()
-
 	#await client.wait_until_ready()
 	await client._msg_queue_loaded.wait()
+	#add commands
+	client.add_cog(command.Status(client, SS))
 
 	#config structures (for convenience)
 	channels = {
@@ -27,6 +29,7 @@ async def main_loop(client):
 		"ban": config.log_ban,
 		"kick": config.log_kick,
 		"unban": config.log_unban,
+		"update": False,
 	}
 	msgtype_priorities = {
 		"chat": int(config.config["discord"]["chat_priority"]),
@@ -37,9 +40,12 @@ async def main_loop(client):
 	fname = config.config['fileio']['localcopy']
 	while not client.is_closed():
 		(host, port, usr, pwd, filepath) = config.get_ftp_config()
-		data = ftp.get_remote_file_text(host, port, usr, pwd, filepath)
+		data = ftp.get_remote_file_binary(host, port, usr, pwd, filepath)
 		#update local copy and return its previous contents
-		old_data = fileio.update(fname, data)
+		old_data = fileio.update_binary(fname, data)
+		#convert to text
+		data = data.decode()
+		old_data = old_data.decode()
 		#find the new part of the log
 		print("Finding new log entries.")
 		new_data = logparse.log_diff(old_data, data)
@@ -47,26 +53,31 @@ async def main_loop(client):
 		#init server status
 		if old_data:
 			#initialize from the old section of the log file.
-			await ss.init_from_log(old_data)
+			await SS.init_from_log(old_data, DB)
 		else:
 			#log file is new, completely reinitialize.
-			await ss.force_init(new_data)
-		async def handle_logmsg(logmsg, msgtype, match):
+			await SS.force_init(new_data, DB)
+		async def handle_msg(logmsg, msgtype, match):
 			"""Sends a log message to discord depending on the type"""
-			ss.handle_logmsg(logmsg, msgtype, match)
+			await SS.handle_msg(logmsg, msgtype, match)
 			#todo: extend the above format to discordio with a client.handle_logmsg method
 			nonlocal client
 			if channel_flags[msgtype]:
-				#printf("waiting")
 				await client.send_msg(logmsg, channels[msgtype], msgtype_priorities[msgtype], msgtype)
 
-		await logparse.parse_lines(new_data, DB, handle_logmsg)
+		await logparse.parse_lines(new_data, DB, handle_msg)
 		#wait
 		interval = int(config.config['time']['interval'])
 		print("Waiting {} seconds".format(interval))
 		#await channel.send("Log finished processing.")
 		await asyncio.sleep(interval)
 
-client = discordio.MyClient(intents=discordio.intents)
+client = discordio.MyClient(intents=discordio.intents, command_prefix="$")
+
+# @client.command()
+# async def test(ctx, arg):
+# 	print(arg)
+# 	await ctx.send(arg)
+
 client.set_loop(main_loop)
 client.run(discordio.TOKEN)

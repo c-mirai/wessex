@@ -66,7 +66,8 @@ class ServerStatus:
 	async def force_init(self, data, db):
 		"""Initialize anything requiring access to the full log file."""
 		#get the date string
-		start = data[18:data.find("\n")]
+		start = data[16:data.find("\r")]
+		print(start)
 		#convert to time
 		#eg. 01/09/21 15:46:46
 		self.start_time = calendar.timegm(time.strptime(start, "%m/%d/%y %H:%M:%S"))

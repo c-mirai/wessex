@@ -14,6 +14,17 @@ def update(fname, data):
 		fp.truncate()
 	return old_data
 
+def update_binary(fname, data):
+	old_data = ""
+	with open(fname, 'rb+') as fp:
+		print("Reading old data.")
+		old_data = fp.read()
+		fp.seek(0)
+		print("Writing new data.")
+		fp.write(data)
+		fp.truncate()
+	return old_data
+
 def read(fname):
 	"""Load a file and return its contents as a string."""
 	data = ""
