@@ -118,6 +118,7 @@ class MyClient(commands.Bot):
 		"""Adds a message to the message queue, to be sent at a rate that complies with discord's rate limit."""
 		#print((priority, (msg, channel)))
 		if msgtype == "chat":
+			msg = discord.utils.escape_markdown(msg)
 			#implement chat batching
 			if len(self._chat_batch) + len(msg) > self._char_limit:
 				#dispatch the batch

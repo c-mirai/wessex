@@ -5,8 +5,6 @@ class Status(commands.Cog):
 	def __init__(self, bot, ss):
 		self.bot = bot
 		self.status = ss
-		print(self.status)
-		print("test")
 
 	@commands.command()
 	async def status(self, ctx):
