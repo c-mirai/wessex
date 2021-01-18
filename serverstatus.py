@@ -2,6 +2,7 @@
 import time
 import calendar
 import logparse
+from texttable import Texttable
 
 def format_time(t):
 	"""Take a number of seconds and return a string representing it in human-readable form, with the highest increment being days."""
@@ -42,7 +43,8 @@ class ServerStatus:
 	def __init__(self):
 		self.player_count = 0
 		self.reserved_slots = 0
-		self.player_list = []
+		#format {playfabid: [name, is_admin]}
+		self.player_list = {}
 		self.mapname = ""
 		self.gamemode = ""
 		self.start_time = 0
@@ -55,23 +57,55 @@ class ServerStatus:
 			self.gamemode = mode
 			self.player_count = playernum
 			self.reserved_slots = reservedslots
-		pass
+		elif msgtype == "plyrjoin":
+			(timestamp, name, pfid) = logparse.format_plyrjoin(match)
+			self.player_list[pfid] = [name, False]
+		elif msgtype == "admjoin":
+			(timestamp, name, pfid) = logparse.format_admjoin(match)
+			if self.player_list.get(pfid):
+				#set the is_admin flag
+				self.player_list[pfid][1] = True
+		elif msgtype == "plyrleave":
+			(timestamp, addr, pfid) = logparse.format_plyrleave(match)
+			self.player_list.pop(pfid, None)
 
-	def str(self):
-		"""Output relevant server info."""
+	def status(self):
+		"""Output server status."""
 		time = format_time(self.get_uptime())
-		s = f"Players: {self.player_count}\nMap: {self.mapname}\nGamemode: {self.gamemode}\nUptime: {time}"
-		return s
+		table = Texttable()
+		table.set_cols_align(["r", "l"])
+		table.set_header_align(["r", "l"])
+		table.add_rows([
+			["Players:", self.player_count],
+			["Map:", self.mapname],
+			["Gamemode:", self.gamemode],
+			["Uptime:", time],
+		])
+		table.set_deco(0)
+		
+		#s = f"Players: {self.player_count}\nMap: {self.mapname}\nGamemode: {self.gamemode}\nUptime: {time}"
+		return f"```{table.draw()}```"
+
+	def playerlist(self):
+		"""Output list of players"""
+		#print(len(self.player_list))
+		list = ""
+		for pfid in self.player_list:
+			list = list + f"{self.player_list[pfid][0]} ({pfid})\n"
+		if list:
+			#get rid of the trailing \n
+			return list[:-1]
+		return "" #no players
 
 	async def force_init(self, data, db):
 		"""Initialize anything requiring access to the full log file."""
 		#get the date string
-		start = data[16:data.find("\r")]
+		start = data[16:data.find('\r')]
 		print(start)
 		#convert to time
 		#eg. 01/09/21 15:46:46
 		self.start_time = calendar.timegm(time.strptime(start, "%m/%d/%y %H:%M:%S"))
-		await logparse.parse_lines(data, db, self.handle_msg)
+		await logparse.parse_lines(data, db, self.handle_msg, False)
 
 	async def init_from_log(self, data, db):
 		"""Wrapper for force_init, only able to be called once.
@@ -89,15 +123,17 @@ class ServerStatus:
 		pass
 
 async def main():
+
 	import mydb
 	ss = ServerStatus()
 	DB = mydb.db()
 	import fileio
-	data = fileio.read("Mordhau.log")
+	data = fileio.read_binary("Mordhau.log")
 	await ss.init_from_log(data, DB)
 	#await logparse.parse_lines(data, DB, ss.handle_msg)
 	#print("Server uptime: {}.".format(format_time(ss.get_uptime())))
-	print(ss.str())
+	print(ss.status())
+	print(ss.playerlist())
 
 if __name__ == '__main__':
 	import asyncio

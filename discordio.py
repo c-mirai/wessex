@@ -15,7 +15,7 @@ handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(me
 logger.addHandler(handler)
 
 intents = discord.Intents.default()
-intents.members = True
+#intents.members = True
 
 TOKEN = config.config["discord"]["token"]
 #GUILDS = config.read_array("discord.guilds","guilds")
@@ -137,12 +137,12 @@ async def main_loop(client):
 	#while not client.is_closed():
 	#print(client._msg_queue)
 	test_channel = client.get_channel(798198029919322122)
-	await client.send_msg("test\ntest1", test_channel, 1)
+	await client.send_msg("```test\ttest1\ntes\tb```", test_channel, 1)
 	print("test messages sent")
 
 
 def main():
-	client = MyClient(intents=intents)
+	client = MyClient(intents=intents, command_prefix="$")
 	client.set_loop(main_loop)
 	client.run(TOKEN)
 

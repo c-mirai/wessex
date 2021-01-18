@@ -32,6 +32,13 @@ def read(fname):
 		data = fp.read()
 	return data
 
+def read_binary(fname):
+	"""Load a file and return its contents as a string."""
+	data = ()
+	with open(fname, "rb") as fp:
+		data = fp.read()
+	return data.decode()
+
 def save_queue(queue):
 	"""Saves an asyncio.PriorityQueue by creating a list of all items and then json.dump that to config.fileio.queue"""
 	fname = config.config["fileio"]["queue"]

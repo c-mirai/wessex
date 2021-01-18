@@ -8,10 +8,11 @@ class Status(commands.Cog):
 
 	@commands.command()
 	async def status(self, ctx):
-		await ctx.send(self.status.str())
+		await ctx.send(self.status.status())
 
+	@commands.command()
 	async def playerlist(self, ctx):
-		pass
+		await ctx.send(self.status.playerlist())
 
 def main():
 	bot = commands.Bot(command_prefix='$')

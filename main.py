@@ -30,6 +30,9 @@ async def main_loop(client):
 		"kick": config.log_kick,
 		"unban": config.log_unban,
 		"update": False,
+		"plyrjoin": False,
+		"admjoin": False,
+		"plyrleave": False,
 	}
 	msgtype_priorities = {
 		"chat": int(config.config["discord"]["chat_priority"]),

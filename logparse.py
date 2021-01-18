@@ -10,7 +10,10 @@ kickban_pattern 	= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.
 unban_pattern 		= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauPlayerController: Display: Admin (.*) \((.*)\) unbanned player (.*)\r\n")
 chat_pattern 		= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogGameMode: Display: \((.*)\) (.*), (.*): \"(.*)\"\r\n")
 update_pattern 		= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogPlayFabAPI: Verbose: UpdateGameServer \(Map: (.*), GameMode: (.*), Players: (.*), ReservedSlots: (.*)\)\r\n")
-
+plyrjoin_pattern 	= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauGameSession: PlayFab authentication for (.*) \((.*)\) completed successfully\r\n")
+admjoin_pattern 	= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauGameSession: Player (.*) \((.*)\) is an admin\r\n")
+#plyrleave_pattern 	= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauGameSession: Verbose: Freed slot occupied by player (.*) \((.*)\)\r\n")
+plyrleave_pattern 	= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogNet: UChannel::Close: Sending CloseBunch. .*\[UNetConnection] RemoteAddr: (.*?),.* UniqueId: MordhauOnlineSubsystem:(.*)\r\n")
 #calculates the novel part of the new log file
 def log_diff(old_data, data):
 	#passthrough if no old_data
@@ -91,6 +94,26 @@ def format_update(match):
 	reservedslots 		= match.group(5)
 	return (timestamp, mapname, mode, playernum, reservedslots)
 
+def format_plyrjoin(match):
+	timestamp 			= match.group(1)
+	plyr_name 			= match.group(2)
+	plyr_playfabid		= match.group(3)
+	return (timestamp, plyr_name, plyr_playfabid)
+
+def format_admjoin(match):
+	timestamp 			= match.group(1)
+	plyr_name 			= match.group(2)
+	plyr_playfabid		= match.group(3)
+	return (timestamp, plyr_name, plyr_playfabid)
+
+def format_plyrleave(match):
+	timestamp 			= match.group(1)
+	plyr_addr 			= match.group(2)
+	plyr_playfabid		= match.group(3)
+	return (timestamp, plyr_addr, plyr_playfabid)
+
+
+
 def match_ban(line):
 	return ban_pattern.match(line)
 
@@ -105,6 +128,15 @@ def match_chat(line):
 
 def match_update(line):
 	return update_pattern.match(line)
+
+def match_plyrjoin(line):
+	return plyrjoin_pattern.match(line)
+
+def match_admjoin(line):
+	return admjoin_pattern.match(line)
+
+def match_plyrleave(line):
+	return plyrleave_pattern.match(line)
 
 async def parse_lines(data, db, callback=None, printing=False):
 	"""loops through every line in the log and determines its type, formats the log msg then calls callback on it
@@ -162,6 +194,18 @@ async def parse_lines(data, db, callback=None, printing=False):
 		if match := match_update(line):
 			logmsg = ""
 			callback and await callback(logmsg, "update", match)
+			continue
+		if match := match_plyrjoin(line):
+			logmsg = ""
+			callback and await callback(logmsg, "plyrjoin", match)
+			continue
+		if match := match_admjoin(line):
+			logmsg = ""
+			callback and await callback(logmsg, "admjoin", match)
+			continue
+		if match := match_plyrleave(line):
+			logmsg = ""
+			callback and await callback(logmsg, "plyrleave", match)
 			continue
 
 async def main():
