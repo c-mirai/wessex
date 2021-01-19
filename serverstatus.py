@@ -31,6 +31,7 @@ def format_time(t):
 		f = f + str(minutes) + " minute"
 		if minutes > 1:
 			f += "s"
+		comma = True
 	if seconds:
 		if comma:
 			f = f + " and "
@@ -119,8 +120,12 @@ class ServerStatus:
 
 	def get_uptime(self):
 		"""Return the amount of time the server has been running."""
-		return time.time() - self.start_time
+		return time.time() - self.start_time - 60*60*5 #ghetto timezone handling
 		pass
+
+	def get_uptime_readable(self):
+		"""Take a time in seconds and return a human-readable representation."""
+		return format_time(self.get_uptime())
 
 async def main():
 

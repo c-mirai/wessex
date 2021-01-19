@@ -5,6 +5,10 @@ import time
 import logging
 import asyncio
 import fileio
+import sys
+import datetime
+import dateutil.tz
+#import serverstatus
 from discord.ext import commands
 
 logger = logging.getLogger('discord')
@@ -89,6 +93,11 @@ class MyClient(commands.Bot):
 			except asyncio.QueueEmpty:
 				#print("queue empty")
 				pass
+			except OSError as err:
+				print("OS error: {0}".format(err))
+				#connection reset by peer?
+			except discord.errors.HTTPException as httperr:
+				print("Http err: {}\n{}\n Length: {}".format(httperr, msg[1][0], len(msg[1][0])))
 
 			await asyncio.sleep(self._msg_ratelimit)
 
@@ -119,6 +128,7 @@ class MyClient(commands.Bot):
 		#print((priority, (msg, channel)))
 		if msgtype == "chat":
 			msg = discord.utils.escape_markdown(msg)
+			msg = discord.utils.escape_mentions(msg)
 			#implement chat batching
 			if len(self._chat_batch) + len(msg) > self._char_limit:
 				#dispatch the batch
@@ -131,14 +141,48 @@ class MyClient(commands.Bot):
 		else:
 			await self._msg_queue.put((priority, (msg, channel)))
 
+	def _format_status_embed(self, ss):
+		embed = (discord.Embed(title="Server Status", color=0x773300, timestamp=datetime.datetime.now(dateutil.tz.gettz()))
+			#.set_footer(text="Last Updated")
+			#.set_author(name="Server Status")
+			.add_field(name="Player count", value=str(ss.player_count), inline=False)
+			.add_field(name="Map", value=ss.mapname, inline=False)
+			.add_field(name="Gamemode", value=ss.gamemode, inline=False)
+			.add_field(name="Uptime", value=ss.get_uptime_readable(), inline=False)
+			)
+		return embed
+
+	async def update_status(self, ss, channel_id=801132836777099294):
+		#guild = self.get_guild(guild_id)
+		channel = self.get_channel(channel_id)
+		messages = await channel.history(limit=2).flatten()
+		status_embed = self._format_status_embed(ss)
+		if len(messages):
+			await messages[0].edit(embed=status_embed)
+		else:
+			await channel.send(embed=status_embed)
+
+		if len(messages) > 1:
+			pass
+
 async def main_loop(client):
 	#await client.wait_until_ready()
 	await client._msg_queue_loaded.wait()
 	#while not client.is_closed():
 	#print(client._msg_queue)
+	from datetime import datetime
+	from dateutil import tz
 	test_channel = client.get_channel(798198029919322122)
-	await client.send_msg("```test\ttest1\ntes\tb```", test_channel, 1)
-	print("test messages sent")
+	test_message = await test_channel.fetch_message(801128435308953640)
+	embed = (discord.Embed(title="Server Status", color=0x663300, timestamp=datetime.now(tz.gettz()))
+			#.set_footer(text="Last Updated")
+			#.set_author(name="Server Status")
+			.add_field(name="Player count", value="45", inline=False)
+			.add_field(name="Map", value="Contraband", inline=False)
+			.add_field(name="Gamemode", value="Deathmatch", inline=False)
+			.add_field(name="Uptime", value="5 seconds", inline=False)
+			)
+	await test_message.edit(embed=embed)
 
 
 def main():

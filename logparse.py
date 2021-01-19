@@ -153,7 +153,7 @@ async def parse_lines(data, db, callback=None, printing=False):
 		if match := match_chat(line):
 			res = format_chat(match)
 			(timestamp, mode, name, plyr_playfabid, msg) = res
-			logmsg = "[{}] ({}) {} ({}): {}".format(timestamp, mode, name, plyr_playfabid, msg)
+			logmsg = "[{}] ({}) {} ({}): {}".format(timestamp, plyr_playfabid, name, mode, msg)
 			printing and print(logmsg)
 			callback and await callback(logmsg, "chat", match)
 			continue
@@ -165,7 +165,7 @@ async def parse_lines(data, db, callback=None, printing=False):
 			adm_discordid = db.get_discordid_from_playfabid(adm_playfabid)
 			adm_mention = ""
 			adm_mention = adm_discordid and f"<@{adm_discordid}>"
-			logmsg = "Logging ban: [{}] {} {} ({}) banned player {} ({}) for {}m (Reason: {}) ".format(timestamp, adm_mention, adm_name, adm_playfabid, name_guess, plyr_playfabid, duration, reason)
+			logmsg = "[{}] {} {} ({}) banned {} ({}) (Length: {}, Reason: {}) ".format(timestamp, adm_mention, adm_name, adm_playfabid, name_guess, plyr_playfabid, duration, reason)
 			printing and print(logmsg)
 			callback and await callback(logmsg, "ban", match)
 			continue
@@ -176,7 +176,7 @@ async def parse_lines(data, db, callback=None, printing=False):
 			adm_discordid = db.get_discordid_from_playfabid(adm_playfabid)
 			adm_mention = ""
 			adm_mention = adm_discordid and f"<@{adm_discordid}>"
-			logmsg = "Logging kick: [{}] {} {} ({}) kicked player {} ({}) (Reason: {})".format(timestamp, adm_mention, adm_name, adm_playfabid, name_guess, plyr_playfabid, reason)
+			logmsg = "[{}] {} {} ({}) kicked {} ({}) (Reason: {})".format(timestamp, adm_mention, adm_name, adm_playfabid, name_guess, plyr_playfabid, reason)
 			printing and print(logmsg)
 			callback and await callback(logmsg, "kick", match)
 			continue
@@ -187,7 +187,7 @@ async def parse_lines(data, db, callback=None, printing=False):
 			adm_discordid = db.get_discordid_from_playfabid(adm_playfabid)
 			adm_mention = ""
 			adm_mention = adm_discordid and f"<@{adm_discordid}>"
-			logmsg = "Logging unban: [{}] {} {} ({}) unbanned player {} ({})".format(timestamp, adm_mention, adm_name, adm_playfabid, name_guess, plyr_playfabid)
+			logmsg = "[{}] {} {} ({}) unbanned {} ({})".format(timestamp, adm_mention, adm_name, adm_playfabid, name_guess, plyr_playfabid)
 			printing and print(logmsg)
 			callback and await callback(logmsg, "unban", match)
 			continue

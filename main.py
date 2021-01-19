@@ -69,10 +69,12 @@ async def main_loop(client):
 				await client.send_msg(logmsg, channels[msgtype], msgtype_priorities[msgtype], msgtype)
 
 		await logparse.parse_lines(new_data, DB, handle_msg)
+		#update status
+		print("Updating status.")
+		await client.update_status(SS)
 		#wait
 		interval = int(config.config['time']['interval'])
 		print("Waiting {} seconds".format(interval))
-		#await channel.send("Log finished processing.")
 		await asyncio.sleep(interval)
 
 client = discordio.MyClient(intents=discordio.intents, command_prefix="$")

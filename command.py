@@ -12,7 +12,11 @@ class Status(commands.Cog):
 
 	@commands.command()
 	async def playerlist(self, ctx):
-		await ctx.send(self.status.playerlist())
+		pl = self.status.playerlist()
+		if pl:
+			await ctx.send(pl)
+		else:
+			await ctx.send("No players currently playing.")
 
 def main():
 	bot = commands.Bot(command_prefix='$')
