@@ -1,5 +1,6 @@
 import logparse
 import ftp
+import aftp
 import config
 import fileio
 import time
@@ -8,8 +9,12 @@ import discordio
 import mydb
 import serverstatus
 import command
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 async def main_loop(client):
+	
 	DB = mydb.db()
 	SS = serverstatus.ServerStatus()
 	#await client.wait_until_ready()
@@ -43,7 +48,7 @@ async def main_loop(client):
 	fname = config.config['fileio']['localcopy']
 	while not client.is_closed():
 		(host, port, usr, pwd, filepath) = config.get_ftp_config()
-		data = ftp.get_remote_file_binary(host, port, usr, pwd, filepath)
+		data = await aftp.get_remote_file_binary(host, port, usr, pwd, filepath)
 		#update local copy and return its previous contents
 		old_data = fileio.update_binary(fname, data)
 		#convert to text
