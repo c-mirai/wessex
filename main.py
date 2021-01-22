@@ -28,6 +28,8 @@ async def main_loop(client):
 		"ban": client.get_channel(config.ban_channelid),
 		"kick": client.get_channel(config.kick_channelid),
 		"unban": client.get_channel(config.unban_channelid),
+		"mute": client.get_channel(config.mute_channelid),
+		"unmute": client.get_channel(config.unmute_channelid),
 	}
 	channel_flags = {
 		"chat": config.log_chat,
@@ -38,12 +40,16 @@ async def main_loop(client):
 		"plyrjoin": False,
 		"admjoin": False,
 		"plyrleave": False,
+		"mute": config.log_mute,
+		"unmute": config.log_unmute,
 	}
 	msgtype_priorities = {
 		"chat": int(config.config["discord"]["chat_priority"]),
 		"ban": int(config.config["discord"]["ban_priority"]),
 		"kick": int(config.config["discord"]["kick_priority"]),
 		"unban": int(config.config["discord"]["unban_priority"]),
+		"mute": int(config.config["discord"]["mute_priority"]),
+		"unmute": int(config.config["discord"]["unmute_priority"]),
 	}
 	fname = config.config['fileio']['localcopy']
 	while not client.is_closed():

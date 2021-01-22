@@ -15,6 +15,8 @@ admjoin_pattern 	= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.
 #plyrleave_pattern 	= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauGameSession: Verbose: Freed slot occupied by player (.*) \((.*)\)\r\n")
 plyrleave_pattern 	= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogNet: UChannel::Close: Sending CloseBunch. .*\[UNetConnection] RemoteAddr: (.*?),.* UniqueId: MordhauOnlineSubsystem:(.*)\r\n")
 register_pattern 	= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogPlayFabAPI: Verbose: RegisterGameServer \(Version: (.*), ServerName: (.*), Map: (.*), GameMode: (.*), Players: (.*), MaxPlayers: (.*), ReservedSlots: (.*), Region: (.*), IP: (.*), GamePort: (.*), BeaconPort: (.*), bAllowJoin: (.*), bIsPasswordProtected: (.*), Mods: (.*), OperatingSystem: (.*)\)\r\n")
+mute_pattern 		= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauPlayerController: Display: Admin (.*) \((.*)\) muted player (.*) \(Duration: (.*)\)\r\n")
+unmute_pattern		= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauPlayerController: Display: Admin (.*) \((.*)\) unmuted player (.*)\r\n")
 
 #calculates the novel part of the new log file
 def log_diff(old_data, data):
@@ -135,6 +137,25 @@ def format_register(match):
 	}
 	return data
 
+def format_mute(match):
+	data = {
+		"timestamp"		: match.group(1),
+		"adm_name"		: match.group(2),
+		"adm_playfabid"	: match.group(3),
+		"plyr_playfabid": match.group(4),
+		"duration"		: match.group(5),
+	}
+	return data
+
+def format_unmute(match):
+	data = {
+		"timestamp"		: match.group(1),
+		"adm_name"		: match.group(2),
+		"adm_playfabid"	: match.group(3),
+		"plyr_playfabid": match.group(4),
+	}
+	return data
+
 
 
 def match_ban(line):
@@ -160,6 +181,12 @@ def match_admjoin(line):
 
 def match_plyrleave(line):
 	return plyrleave_pattern.match(line)
+
+def match_mute(line):
+	return mute_pattern.match(line)
+
+def match_unmute(line):
+	return unmute_pattern.match(line)
 
 async def parse_lines(data, db, callback=None, printing=False):
 	"""loops through every line in the log and determines its type, formats the log msg then calls callback on it
@@ -230,14 +257,34 @@ async def parse_lines(data, db, callback=None, printing=False):
 			logmsg = ""
 			callback and await callback(logmsg, "plyrleave", match)
 			continue
+		if match := match_mute(line):
+			res = format_mute(match)
+			name_guess = guess_name(data, res["plyr_playfabid"])
+			adm_discordid = db.get_discordid_from_playfabid(res["adm_playfabid"])
+			adm_mention = ""
+			adm_mention = adm_discordid and f"<@{adm_discordid}>"
+			logmsg = f"[{res['timestamp']}] {adm_mention} {res['adm_name']} ({res['adm_playfabid']}) muted {name_guess} ({res['plyr_playfabid']}) (Duration: {res['duration']})"
+			printing and print(logmsg)
+			callback and await callback(logmsg, "mute", match)
+			continue
+		if match := match_unmute(line):
+			res = format_unmute(match)
+			name_guess = guess_name(data, res["plyr_playfabid"])
+			adm_discordid = db.get_discordid_from_playfabid(res["adm_playfabid"])
+			adm_mention = ""
+			adm_mention = adm_discordid and f"<@{adm_discordid}>"
+			logmsg = f"[{res['timestamp']}] {adm_mention} {res['adm_name']} ({res['adm_playfabid']}) unmuted {name_guess} ({res['plyr_playfabid']})"
+			printing and print(logmsg)
+			callback and await callback(logmsg, "mute", match)
+			continue
 
 async def main():
 	import mydb
 	mydb = mydb.db()
 	data = ""
-	with open("test/test.log", "r") as fp:
+	with open("Mordhau.log", "rb") as fp:
 		data = fp.read()
-	await parse_lines(data, mydb)
+	await parse_lines(data.decode(), mydb, printing=True)
 	print(timestamp_to_datetime("2021.01.09-22.17.01:079"))
 
 if __name__ == '__main__':
