@@ -43,12 +43,17 @@ def format_time(t):
 class ServerStatus:
 	def __init__(self):
 		self.player_count = 0
+		self.max_players = 0 #
 		self.reserved_slots = 0
 		#format {playfabid: [name, is_admin]}
 		self.player_list = {}
 		self.mapname = ""
 		self.gamemode = ""
 		self.start_time = 0
+		self.server_name = "" #
+		self.server_ip = "" #
+		self.game_port = 0 #
+		self.mods = [] #unimplemented
 		self._initialized = False
 	async def handle_msg(self, msg, msgtype, match=None):
 		"""Handle a single log string from logparse."""
@@ -89,13 +94,18 @@ class ServerStatus:
 
 	def playerlist(self):
 		"""Output list of players"""
-		#print(len(self.player_list))
+		table = Texttable()
+		table.set_deco(0)
+		table.set_cols_align(["l", "l"])
 		list = ""
 		for pfid in self.player_list:
 			list = list + f"{self.player_list[pfid][0]} ({pfid})\n"
+			table.add_row([f"({pfid})", self.player_list[pfid][0]])
 		if list:
 			#get rid of the trailing \n
-			return list[:-1]
+			return f"```{table.draw()}```"
+			#return list[:-1]
+
 		return "" #no players
 
 	async def force_init(self, data, db):
@@ -106,6 +116,13 @@ class ServerStatus:
 		#convert to time
 		#eg. 01/09/21 15:46:46
 		self.start_time = calendar.timegm(time.strptime(start, "%m/%d/%y %H:%M:%S"))
+		#get server registered info
+		match =  logparse.register_pattern.search(data)
+		info = logparse.format_register(match)
+		self.server_name 	= info["server_name"]
+		self.max_players 	= int(info["max_players"])
+		self.server_ip 		= info["ip"]
+		self.game_port		= int(info["game_port"])
 		await logparse.parse_lines(data, db, self.handle_msg, False)
 
 	async def init_from_log(self, data, db):

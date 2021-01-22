@@ -130,7 +130,7 @@ class MyClient(commands.Bot):
 			msg = discord.utils.escape_markdown(msg)
 			msg = discord.utils.escape_mentions(msg)
 			#implement chat batching
-			if len(self._chat_batch) + len(msg) > self._char_limit:
+			if len(self._chat_batch) + len(msg) > self._char_limit - 1: #-1 to account for the \n added
 				#dispatch the batch
 				await self._msg_queue.put((priority, (self._chat_batch, channel)))
 				self._chat_batch = msg
@@ -142,13 +142,16 @@ class MyClient(commands.Bot):
 			await self._msg_queue.put((priority, (msg, channel)))
 
 	def _format_status_embed(self, ss):
+		playerlist = ss.playerlist()
 		embed = (discord.Embed(title="Server Status", color=0x773300, timestamp=datetime.datetime.now(dateutil.tz.gettz()))
-			#.set_footer(text="Last Updated")
+			.set_footer(text="Updates every 5 minutes")
 			#.set_author(name="Server Status")
-			.add_field(name="Player count", value=str(ss.player_count), inline=False)
+			.add_field(name=ss.server_name, value=f"{ss.server_ip}:{ss.game_port}", inline=False)
+			.add_field(name="Player Count", value=f"{ss.player_count}/{ss.max_players}", inline=False)
 			.add_field(name="Map", value=ss.mapname, inline=False)
 			.add_field(name="Gamemode", value=ss.gamemode, inline=False)
 			.add_field(name="Uptime", value=ss.get_uptime_readable(), inline=False)
+			.add_field(name="Player List", value=playerlist, inline=False)
 			)
 		return embed
 

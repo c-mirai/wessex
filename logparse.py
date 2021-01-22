@@ -14,6 +14,8 @@ plyrjoin_pattern 	= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[
 admjoin_pattern 	= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauGameSession: Player (.*) \((.*)\) is an admin\r\n")
 #plyrleave_pattern 	= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauGameSession: Verbose: Freed slot occupied by player (.*) \((.*)\)\r\n")
 plyrleave_pattern 	= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogNet: UChannel::Close: Sending CloseBunch. .*\[UNetConnection] RemoteAddr: (.*?),.* UniqueId: MordhauOnlineSubsystem:(.*)\r\n")
+register_pattern 	= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogPlayFabAPI: Verbose: RegisterGameServer \(Version: (.*), ServerName: (.*), Map: (.*), GameMode: (.*), Players: (.*), MaxPlayers: (.*), ReservedSlots: (.*), Region: (.*), IP: (.*), GamePort: (.*), BeaconPort: (.*), bAllowJoin: (.*), bIsPasswordProtected: (.*), Mods: (.*), OperatingSystem: (.*)\)\r\n")
+
 #calculates the novel part of the new log file
 def log_diff(old_data, data):
 	#passthrough if no old_data
@@ -111,6 +113,27 @@ def format_plyrleave(match):
 	plyr_addr 			= match.group(2)
 	plyr_playfabid		= match.group(3)
 	return (timestamp, plyr_addr, plyr_playfabid)
+
+def format_register(match):
+	data = {
+		"timestamp" 	: match.group(1),
+		"version"		: match.group(2),
+		"server_name"	: match.group(3),
+		"map_name"		: match.group(4),
+		"gamemode"		: match.group(5),
+		"players"		: match.group(6),
+		"max_players"	: match.group(7),
+		"reserved_slots": match.group(8),
+		"region"		: match.group(9),
+		"ip"			: match.group(10),
+		"game_port"		: match.group(11),
+		"beacon_port"	: match.group(12),
+		"allow_join"	: match.group(13),
+		"is_pw"			: match.group(14),
+		"mods"			: match.group(15),
+		"os"			: match.group(16),
+	}
+	return data
 
 
 
