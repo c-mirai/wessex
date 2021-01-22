@@ -1,9 +1,10 @@
 import asyncio
 import aioftp
 import logging
+import config
 
 async def get_remote_file_binary(host, port, usr, pwd, filepath):
-	client = aioftp.Client()
+	client = aioftp.Client(read_speed_limit=int(config.config["ftp"]["throttle"]))
 	logging.info(f"Connecting to {host}:{port}.")
 	await client.connect(host, port)
 	logging.info(f"Logging in.")
