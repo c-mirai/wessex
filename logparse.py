@@ -212,7 +212,7 @@ async def parse_lines(data, db, callback=None, printing=False):
 			(timestamp, adm_name, adm_playfabid, plyr_playfabid, duration, reason) = res
 			name_guess = guess_name(data, plyr_playfabid)
 			#resolve discordid from playfabid
-			adm_discordid = db.get_discordid_from_playfabid(adm_playfabid)
+			adm_discordid = await db.get_discordid_from_playfabid(adm_playfabid)
 			adm_mention = ""
 			adm_mention = adm_discordid and f"<@{adm_discordid}>"
 			logmsg = "[{}] {} {} ({}) banned {} ({}) (Length: {}, Reason: {}) ".format(timestamp, adm_mention, adm_name, adm_playfabid, name_guess, plyr_playfabid, duration, reason)
@@ -223,7 +223,7 @@ async def parse_lines(data, db, callback=None, printing=False):
 			res = format_kick(match)
 			(timestamp, adm_name, adm_playfabid, plyr_playfabid, reason) = res
 			name_guess = guess_name(data, plyr_playfabid)
-			adm_discordid = db.get_discordid_from_playfabid(adm_playfabid)
+			adm_discordid = await db.get_discordid_from_playfabid(adm_playfabid)
 			adm_mention = ""
 			adm_mention = adm_discordid and f"<@{adm_discordid}>"
 			logmsg = "[{}] {} {} ({}) kicked {} ({}) (Reason: {})".format(timestamp, adm_mention, adm_name, adm_playfabid, name_guess, plyr_playfabid, reason)
@@ -234,7 +234,7 @@ async def parse_lines(data, db, callback=None, printing=False):
 			res = format_unban(match)
 			(timestamp, adm_name, adm_playfabid, plyr_playfabid) = res
 			name_guess = guess_name(data, plyr_playfabid)
-			adm_discordid = db.get_discordid_from_playfabid(adm_playfabid)
+			adm_discordid = await db.get_discordid_from_playfabid(adm_playfabid)
 			adm_mention = ""
 			adm_mention = adm_discordid and f"<@{adm_discordid}>"
 			logmsg = "[{}] {} {} ({}) unbanned {} ({})".format(timestamp, adm_mention, adm_name, adm_playfabid, name_guess, plyr_playfabid)
@@ -260,7 +260,7 @@ async def parse_lines(data, db, callback=None, printing=False):
 		if match := match_mute(line):
 			res = format_mute(match)
 			name_guess = guess_name(data, res["plyr_playfabid"])
-			adm_discordid = db.get_discordid_from_playfabid(res["adm_playfabid"])
+			adm_discordid = await db.get_discordid_from_playfabid(res["adm_playfabid"])
 			adm_mention = ""
 			adm_mention = adm_discordid and f"<@{adm_discordid}>"
 			logmsg = f"[{res['timestamp']}] {adm_mention} {res['adm_name']} ({res['adm_playfabid']}) muted {name_guess} ({res['plyr_playfabid']}) (Duration: {res['duration']})"
@@ -270,7 +270,7 @@ async def parse_lines(data, db, callback=None, printing=False):
 		if match := match_unmute(line):
 			res = format_unmute(match)
 			name_guess = guess_name(data, res["plyr_playfabid"])
-			adm_discordid = db.get_discordid_from_playfabid(res["adm_playfabid"])
+			adm_discordid = await db.get_discordid_from_playfabid(res["adm_playfabid"])
 			adm_mention = ""
 			adm_mention = adm_discordid and f"<@{adm_discordid}>"
 			logmsg = f"[{res['timestamp']}] {adm_mention} {res['adm_name']} ({res['adm_playfabid']}) unmuted {name_guess} ({res['plyr_playfabid']})"

@@ -7,6 +7,7 @@ import time
 import asyncio
 import discordio
 import mydb
+import sqlitedb
 import serverstatus
 import command
 import logging
@@ -15,42 +16,14 @@ logging.basicConfig(level=logging.INFO)
 
 async def main_loop(client):
 	
-	DB = mydb.db()
+	DB = sqlitedb.db()
 	SS = serverstatus.ServerStatus()
 	#await client.wait_until_ready()
 	await client._msg_queue_loaded.wait()
 	#add commands
 	client.add_cog(command.Status(client, SS))
 
-	#config structures (for convenience)
-	channels = {
-		"chat": client.get_channel(config.chat_channelid),
-		"ban": client.get_channel(config.ban_channelid),
-		"kick": client.get_channel(config.kick_channelid),
-		"unban": client.get_channel(config.unban_channelid),
-		"mute": client.get_channel(config.mute_channelid),
-		"unmute": client.get_channel(config.unmute_channelid),
-	}
-	channel_flags = {
-		"chat": config.log_chat,
-		"ban": config.log_ban,
-		"kick": config.log_kick,
-		"unban": config.log_unban,
-		"update": False,
-		"plyrjoin": False,
-		"admjoin": False,
-		"plyrleave": False,
-		"mute": config.log_mute,
-		"unmute": config.log_unmute,
-	}
-	msgtype_priorities = {
-		"chat": int(config.config["discord"]["chat_priority"]),
-		"ban": int(config.config["discord"]["ban_priority"]),
-		"kick": int(config.config["discord"]["kick_priority"]),
-		"unban": int(config.config["discord"]["unban_priority"]),
-		"mute": int(config.config["discord"]["mute_priority"]),
-		"unmute": int(config.config["discord"]["unmute_priority"]),
-	}
+
 	fname = config.config['fileio']['localcopy']
 	while not client.is_closed():
 		(host, port, usr, pwd, filepath) = config.get_ftp_config()
@@ -71,13 +44,18 @@ async def main_loop(client):
 		else:
 			#log file is new, completely reinitialize.
 			await SS.force_init(new_data, DB)
-		async def handle_msg(logmsg, msgtype, match):
-			"""Sends a log message to discord depending on the type"""
-			await SS.handle_msg(logmsg, msgtype, match)
-			#todo: extend the above format to discordio with a client.handle_logmsg method
-			nonlocal client
-			if channel_flags[msgtype]:
-				await client.send_msg(logmsg, channels[msgtype], msgtype_priorities[msgtype], msgtype)
+		async def handle_msg(*args):
+			"""Handle messages.
+
+			logmsg 	- readable form of the message
+			msgtype - message type
+			match 	- regex match of the message"""
+			# await SS.handle_msg(*args)
+			# await client.handle_msg(*args)
+			await asyncio.gather(
+				SS.handle_msg(*args),
+				client.handle_msg(*args),
+			)
 
 		await logparse.parse_lines(new_data, DB, handle_msg)
 		#update status

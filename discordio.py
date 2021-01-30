@@ -27,6 +27,11 @@ TOKEN = config.config["discord"]["token"]
 class MyClient(commands.Bot):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
+		#config structures (for convenience)
+		#these 3 will be populated in on_ready
+		self.channels = {}
+		self.channel_flags = {}
+		self.msgtype_priorities = {}
 		#Discord message rate limit (seconds per message)
 		import atexit
 		global __name__
@@ -105,6 +110,34 @@ class MyClient(commands.Bot):
 		self.bg_loop = self.loop.create_task(loop(self))
 
 	async def on_ready(self):
+		self.channels = {
+			"chat": self.get_channel(config.chat_channelid),
+			"ban": self.get_channel(config.ban_channelid),
+			"kick": self.get_channel(config.kick_channelid),
+			"unban": self.get_channel(config.unban_channelid),
+			"mute": self.get_channel(config.mute_channelid),
+			"unmute": self.get_channel(config.unmute_channelid),
+		}
+		self.channel_flags = {
+			"chat": config.log_chat,
+			"ban": config.log_ban,
+			"kick": config.log_kick,
+			"unban": config.log_unban,
+			"update": False,
+			"plyrjoin": False,
+			"admjoin": False,
+			"plyrleave": False,
+			"mute": config.log_mute,
+			"unmute": config.log_unmute,
+		}
+		self.msgtype_priorities = {
+			"chat": int(config.config["discord"]["chat_priority"]),
+			"ban": int(config.config["discord"]["ban_priority"]),
+			"kick": int(config.config["discord"]["kick_priority"]),
+			"unban": int(config.config["discord"]["unban_priority"]),
+			"mute": int(config.config["discord"]["mute_priority"]),
+			"unmute": int(config.config["discord"]["unmute_priority"]),
+		}
 		#this needs to be done here so that get_channel can resolve the channel ids
 		self._chat_channel = self.get_channel(int(config.config['discord']['chat_channelid']))
 		self._msg_queue = await self._load_queue()
@@ -140,6 +173,11 @@ class MyClient(commands.Bot):
 				self._chat_batch += "\n" + msg
 		else:
 			await self._msg_queue.put((priority, (msg, channel)))
+
+	async def handle_msg(self, logmsg, msgtype, match):
+		"""Handle a log message."""
+		if self.channel_flags[msgtype]:
+			await self.send_msg(logmsg, self.channels[msgtype], self.msgtype_priorities[msgtype], msgtype)
 
 	def _format_status_embed(self, ss):
 		playerlist = ss.playerlist()

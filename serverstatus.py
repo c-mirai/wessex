@@ -38,6 +38,8 @@ def format_time(t):
 		f = f + str(seconds) + " second"
 		if seconds > 1:
 			f += "s"
+	if not f:
+		f = "0 seconds"
 	return f
 
 class ServerStatus:
@@ -106,7 +108,7 @@ class ServerStatus:
 			return f"```{table.draw()}```"
 			#return list[:-1]
 
-		return "" #no players
+		return "No players currently playing." #no players
 
 	async def force_init(self, data, db):
 		"""Initialize anything requiring access to the full log file."""
