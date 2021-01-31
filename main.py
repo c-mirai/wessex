@@ -22,7 +22,7 @@ async def main_loop(client):
 	await client._msg_queue_loaded.wait()
 	#add commands
 	client.add_cog(command.Status(client, SS))
-
+	client.add_cog(command.DB(client, DB))
 
 	fname = config.config['fileio']['localcopy']
 	while not client.is_closed():
@@ -55,6 +55,7 @@ async def main_loop(client):
 			await asyncio.gather(
 				SS.handle_msg(*args),
 				client.handle_msg(*args),
+				DB.handle_msg(*args),
 			)
 
 		await logparse.parse_lines(new_data, DB, handle_msg)

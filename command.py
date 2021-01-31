@@ -1,9 +1,9 @@
 from discord.ext import commands
 import discordio
+import discord
 
 class Status(commands.Cog):
 	depmsg = "Command deprecated - check the <#801132836777099294> channel!"
-	
 	def __init__(self, bot, ss):
 		self.bot = bot
 		self.status = ss
@@ -20,6 +20,74 @@ class Status(commands.Cog):
 		# else:
 		# 	await ctx.send("No players currently playing.")
 		await ctx.send(self.depmsg)
+
+async def is_admin(ctx):
+	return bool(discord.utils.find(lambda r: r.permissions.administrator, ctx.author.roles))
+
+class DB(commands.Cog):
+	def __init__(self, bot, db):
+		self.bot = bot
+		self.db = db
+		self.q_get_all_bans = "SELECT * FROM bans"
+		self.q_get_all_players = "SELECT * FROM players"
+
+	@commands.group()
+	@commands.check(is_admin)
+	async def bans(self, ctx):
+		if ctx.invoked_subcommand is None:
+			await ctx.send("Invalid bans command.")
+
+	@bans.command()
+	async def all(self, ctx):
+		"""Gets a list of all ban information in the system."""
+		paginator = commands.Paginator()
+		res = await self.db.fetch_all(self.q_get_all_bans)
+		for line in res:
+			paginator.add_line(str(line))
+		for page in paginator.pages:
+			await ctx.send(page)
+
+	@bans.command()
+	async def admin(self, ctx, id):
+		"""Gets a list of all ban information in the system."""
+		q = f"SELECT * FROM bans WHERE AdminID='{id}'"
+		paginator = commands.Paginator()
+		res = await self.db.fetch_all(q)
+		if not len(res):
+			await ctx.send("No bans found by that admin.")
+		for line in res:
+			paginator.add_line(str(line))
+		for page in paginator.pages:
+			await ctx.send(page)
+
+	@bans.command()
+	async def player(self, ctx, id):
+		"""Gets a list of all ban information in the system."""
+		q = f"SELECT * FROM bans WHERE PlayerID='{id}'"
+		paginator = commands.Paginator()
+		res = await self.db.fetch_all(q)
+		if not len(res):
+			await ctx.send("No bans found for that player.")
+		for line in res:
+			paginator.add_line(str(line))
+		for page in paginator.pages:
+			await ctx.send(page)
+
+	@commands.group()
+	@commands.check(is_admin)
+	async def players(self, ctx):
+		if ctx.invoked_subcommand is None:
+			await ctx.send("Invalid players command.")
+
+	@players.command()
+	async def all(self, ctx):
+		"""Gets a list of all ban information in the system."""
+		paginator = commands.Paginator()
+		res = await self.db.fetch_all(self.q_get_all_players)
+		for line in res:
+			paginator.add_line(str(line))
+		for page in paginator.pages:
+			await ctx.send(page)
 
 def main():
 	bot = commands.Bot(command_prefix='$')

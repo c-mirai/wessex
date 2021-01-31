@@ -17,6 +17,13 @@ class db:
 			async with db.execute(sql) as cursor:
 				return await cursor.fetchone()
 
+	async def fetch_all(self, sql):
+		"""Execute an sql command and return a single result from it."""
+		async with aiosqlite.connect("db/wessex.db") as db:
+			#print("Executing :" + sql)
+			async with db.execute(sql) as cursor:
+				return await cursor.fetchall()
+
 	async def execute(self, sql):
 		"""Execute an sql command with no return value."""
 		async with aiosqlite.connect("db/wessex.db") as db:
