@@ -200,14 +200,16 @@ async def parse_lines(data, db, callback=None, printing=False):
 	#printing = False
 	while(line):
 		line = buf.readline()
-		if match := match_chat(line):
+		match = match_chat(line)
+		if match:
 			res = format_chat(match)
 			(timestamp, mode, name, plyr_playfabid, msg) = res
 			logmsg = "[{}] ({}) {} ({}): {}".format(timestamp, plyr_playfabid, name, mode, msg)
 			printing and print(logmsg)
 			callback and await callback(logmsg, "chat", match)
 			continue
-		if match := match_ban(line):
+		match = match_ban(line)
+		if match:
 			res = format_ban(match)
 			(timestamp, adm_name, adm_playfabid, plyr_playfabid, duration, reason) = res
 			name_guess = guess_name(data, plyr_playfabid)
@@ -219,7 +221,8 @@ async def parse_lines(data, db, callback=None, printing=False):
 			printing and print(logmsg)
 			callback and await callback(logmsg, "ban", match)
 			continue
-		if match := match_kick(line):
+		match = match_kick(line)
+		if match:
 			res = format_kick(match)
 			(timestamp, adm_name, adm_playfabid, plyr_playfabid, reason) = res
 			name_guess = guess_name(data, plyr_playfabid)
@@ -230,7 +233,8 @@ async def parse_lines(data, db, callback=None, printing=False):
 			printing and print(logmsg)
 			callback and await callback(logmsg, "kick", match)
 			continue
-		if match := match_unban(line):
+		match = match_unban(line)
+		if match:
 			res = format_unban(match)
 			(timestamp, adm_name, adm_playfabid, plyr_playfabid) = res
 			name_guess = guess_name(data, plyr_playfabid)
@@ -241,23 +245,28 @@ async def parse_lines(data, db, callback=None, printing=False):
 			printing and print(logmsg)
 			callback and await callback(logmsg, "unban", match)
 			continue
-		if match := match_update(line):
+		match = match_update(line)
+		if match:
 			logmsg = ""
 			callback and await callback(logmsg, "update", match)
 			continue
-		if match := match_plyrjoin(line):
+		match = match_plyrjoin(line)
+		if match:
 			logmsg = ""
 			callback and await callback(logmsg, "plyrjoin", match)
 			continue
-		if match := match_admjoin(line):
+		match = match_admjoin(line)
+		if match:
 			logmsg = ""
 			callback and await callback(logmsg, "admjoin", match)
 			continue
-		if match := match_plyrleave(line):
+		match = match_plyrleave(line)
+		if match:
 			logmsg = ""
 			callback and await callback(logmsg, "plyrleave", match)
 			continue
-		if match := match_mute(line):
+		match = match_mute(line)
+		if match:
 			res = format_mute(match)
 			name_guess = guess_name(data, res["plyr_playfabid"])
 			adm_discordid = await db.get_discordid_from_playfabid(res["adm_playfabid"])
@@ -267,7 +276,8 @@ async def parse_lines(data, db, callback=None, printing=False):
 			printing and print(logmsg)
 			callback and await callback(logmsg, "mute", match)
 			continue
-		if match := match_unmute(line):
+		match = match_unmute(line)
+		if match:
 			res = format_unmute(match)
 			name_guess = guess_name(data, res["plyr_playfabid"])
 			adm_discordid = await db.get_discordid_from_playfabid(res["adm_playfabid"])
@@ -279,8 +289,8 @@ async def parse_lines(data, db, callback=None, printing=False):
 			continue
 
 async def main():
-	import mydb
-	mydb = mydb.db()
+	import sqlitedb
+	mydb = sqlitedb.db()
 	data = ""
 	with open("Mordhau.log", "rb") as fp:
 		data = fp.read()
