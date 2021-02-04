@@ -11,6 +11,7 @@ import sqlitedb
 import serverstatus
 import command
 import logging
+import sys
 
 logging.basicConfig(level=logging.INFO)
 
@@ -27,7 +28,12 @@ async def main_loop(client):
 	fname = config.config['fileio']['localcopy']
 	while not client.is_closed():
 		(host, port, usr, pwd, filepath) = config.get_ftp_config()
-		data = await aftp.get_remote_file_binary(host, port, usr, pwd, filepath)
+		try:
+			data = await aftp.get_remote_file_binary(host, port, usr, pwd, filepath)
+		except ConnectionResetError:
+			logging.warning("Connection reset error on log download.")
+		except:
+			logging.error("Unexpected error on log download: " + sys.exc_info()[0])
 		#update local copy and return its previous contents
 		old_data = fileio.update_binary(fname, data)
 		#convert to text
