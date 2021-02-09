@@ -105,7 +105,7 @@ class ServerStatus:
 			table.add_row([f"({pfid})", self.player_list[pfid][0]])
 		if list:
 			#get rid of the trailing \n
-			return f"```{table.draw()}```"
+			return table.draw()
 			#return list[:-1]
 
 		return "No players currently playing." #no players

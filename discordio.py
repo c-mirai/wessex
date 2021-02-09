@@ -189,8 +189,16 @@ class MyClient(commands.Bot):
 			.add_field(name="Map", value=ss.mapname, inline=False)
 			.add_field(name="Gamemode", value=ss.gamemode, inline=False)
 			.add_field(name="Uptime", value=ss.get_uptime_readable(), inline=False)
-			.add_field(name="Player List", value=playerlist, inline=False)
 			)
+
+		#support greater-than-1024-character playerlists
+		paginator = commands.Paginator(max_size=1024)
+		for line in playerlist.splitlines():
+			paginator.add_line(line)
+		embed.add_field(name="Player List", value=paginator.pages[0], inline=False)
+		if len(paginator.pages) > 1:
+			for page in paginator.pages[1:]:
+				embed.add_field(name="Player List (cont.)", value=page, inline=False)
 		return embed
 
 	async def update_status(self, ss, channel_id=801132836777099294):
