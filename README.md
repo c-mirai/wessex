@@ -48,7 +48,8 @@ Most of the other settings don't need to be changed. `throttle` is the download 
 You can run the server in bash with
 
 ```
-python3 main.py & disown
+nohup python3 main.py 2>&1 > log.log &
+disown
 ```
 
 You'll need to resolve several dependencies by installing with pip.
