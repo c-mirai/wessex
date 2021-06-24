@@ -43,6 +43,8 @@ guilds=["myserver","myotherserver"]
 
 Most of the other settings don't need to be changed. `throttle` is the download speed in bytes, 20 KB/s by default. Keep this low to make sure pings won't be affected in your server.
 
+### Running
+
 You can run the server in bash with
 
 ```
