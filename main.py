@@ -37,6 +37,9 @@ async def main_loop(client):
 		except:
 			logging.error("Unexpected error on log download: " + str(sys.exc_info()[0]))
 			continue
+
+		#create local copy file if not created
+		fileio.create_if_not_created(fname)
 		#update local copy and return its previous contents
 		old_data = fileio.update_binary(fname, data)
 		#convert to text

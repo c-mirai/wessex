@@ -2,6 +2,13 @@ import asyncio
 import json
 import config
 
+
+def create_if_not_created(fname):
+	"""Create fname if not created."""
+
+	with open(fname, 'w+') as fp:
+		pass
+
 #updates file and returns the old data
 def update(fname, data):
 	old_data = ""
