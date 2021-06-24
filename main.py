@@ -15,7 +15,11 @@ import sys
 
 logging.basicConfig(level=logging.INFO)
 
+DEBUG = False
+
 async def main_loop(client):
+	if DEBUG:
+		logging.info('DEBUG is TRUE')
 	
 	DB = mydb.db()
 	SS = serverstatus.ServerStatus()
@@ -27,24 +31,31 @@ async def main_loop(client):
 
 	fname = config.config['fileio']['localcopy']
 	while not client.is_closed():
+		#initalize data
 		data = bytearray()
-		(host, port, usr, pwd, filepath) = config.get_ftp_config()
-		try:
-			data = await aftp.get_remote_file_binary(host, port, usr, pwd, filepath)
-		except ConnectionResetError:
-			logging.warning("Connection reset error on log download.")
-			continue
-		except:
-			logging.error("Unexpected error on log download: " + str(sys.exc_info()[0]))
-			continue
-
 		#create local copy file if not created
 		fileio.create_if_not_created(fname)
-		#update local copy and return its previous contents
-		old_data = fileio.update_binary(fname, data)
-		#convert to text
-		data = data.decode()
-		old_data = old_data.decode()
+		if not DEBUG:
+			(host, port, usr, pwd, filepath) = config.get_ftp_config()
+			try:
+				data = await aftp.get_remote_file_binary(host, port, usr, pwd, filepath)
+			except ConnectionResetError:
+				logging.warning("Connection reset error on log download.")
+				continue
+			except:
+				logging.error("Unexpected error on log download: " + str(sys.exc_info()[0]))
+				continue
+			#update local copy and return its previous contents
+			old_data = fileio.update_binary(fname, data)
+			#convert to text
+			data = data.decode()
+			old_data = old_data.decode()
+		else:
+			#for debug purposes, read Mordhau.log as new data
+			data = fileio.read_binary(fname)
+			old_data = ''
+
+
 		#find the new part of the log
 		print("Finding new log entries.")
 		new_data = logparse.log_diff(old_data, data)
