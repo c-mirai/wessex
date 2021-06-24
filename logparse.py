@@ -1,7 +1,7 @@
 import re
 import io
 import datetime
-from db import db
+#from db import db
 
 timestamp_pattern 	= re.compile(r"\[\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3}\]")
 microsecond_pattern = re.compile(r":(\d{3})\]")
@@ -333,7 +333,7 @@ async def parse_lines(data, db, callback=None, printing=False):
 		match = match_chat(line)
 		if match:
 			res = format_chat(match)
-			(timestamp, mode, name, plyr_playfabid, msg) = res
+			(timestamp, mode, name, plyr_playfabid, msg) = (res[k] for k in res) #requires python 3.7
 			logmsg = "[{}] ({}) {} ({}): {}".format(timestamp, plyr_playfabid, name, mode, msg)
 			printing and print(logmsg)
 			callback and await callback(logmsg, "chat", match)
@@ -341,7 +341,7 @@ async def parse_lines(data, db, callback=None, printing=False):
 		match = match_ban(line)
 		if match:
 			res = format_ban(match)
-			(timestamp, adm_name, adm_playfabid, plyr_playfabid, duration, reason) = res
+			(timestamp, adm_name, adm_playfabid, plyr_playfabid, duration, reason) = (res[k] for k in res) #requires python 3.7
 			name_guess = guess_name(data, plyr_playfabid)
 			#resolve discordid from playfabid
 			adm_discordid = await db.get_discordid_from_playfabid(adm_playfabid)
@@ -354,7 +354,7 @@ async def parse_lines(data, db, callback=None, printing=False):
 		match = match_kick(line)
 		if match:
 			res = format_kick(match)
-			(timestamp, adm_name, adm_playfabid, plyr_playfabid, reason) = res
+			(timestamp, adm_name, adm_playfabid, plyr_playfabid, reason) = (res[k] for k in res) #requires python 3.7
 			name_guess = guess_name(data, plyr_playfabid)
 			adm_discordid = await db.get_discordid_from_playfabid(adm_playfabid)
 			adm_mention = ""
@@ -366,7 +366,7 @@ async def parse_lines(data, db, callback=None, printing=False):
 		match = match_unban(line)
 		if match:
 			res = format_unban(match)
-			(timestamp, adm_name, adm_playfabid, plyr_playfabid) = res
+			(timestamp, adm_name, adm_playfabid, plyr_playfabid) = (res[k] for k in res) #requires python 3.7
 			name_guess = guess_name(data, plyr_playfabid)
 			adm_discordid = await db.get_discordid_from_playfabid(adm_playfabid)
 			adm_mention = ""

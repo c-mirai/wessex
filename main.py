@@ -18,8 +18,14 @@ logging.basicConfig(level=logging.INFO)
 DEBUG = False
 
 async def main_loop(client):
+	global DEBUG
 	if DEBUG:
 		logging.info('DEBUG is TRUE')
+	else:
+		if len(sys.argv) > 1:
+			if sys.argv[1] == '-d':
+				logging.info('DEBUG set TRUE from cli')
+				DEBUG = True
 	
 	DB = mydb.db()
 	SS = serverstatus.ServerStatus()
@@ -80,7 +86,7 @@ async def main_loop(client):
 				client.handle_msg(*args),
 				#DB.handle_msg(*args),
 			)
-
+		logging.info("Parsing lines.")
 		await logparse.parse_lines(new_data, DB, handle_msg)
 		#update status
 		print("Updating status.")

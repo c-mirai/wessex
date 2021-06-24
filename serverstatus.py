@@ -3,6 +3,9 @@ import time
 import calendar
 import logparse
 from texttable import Texttable
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 def format_time(t):
 	"""Take a number of seconds and return a string representing it in human-readable form, with the highest increment being days."""
@@ -57,8 +60,13 @@ class ServerStatus:
 		self.game_port = 0 #
 		self.mods = [] #unimplemented
 		self._initialized = False
+		# self.messages_handled = 0
 	async def handle_msg(self, msg, msgtype, match=None):
 		"""Handle a single log string from logparse."""
+
+		# self.messages_handled += 1
+		# if not self.messages_handled % 100:
+		# 	logging.info(f'Messages handled: {self.messages_handled}')
 		if msgtype == "update":
 			res = logparse.format_update(match)
 			names = ("timestamp", "mapname", "mode", "playernum", "reservedslots")
@@ -69,19 +77,19 @@ class ServerStatus:
 			self.reserved_slots = reservedslots
 		elif msgtype == "plyrjoin":
 			res = logparse.format_plyrjoin(match)
-			names = ("timestamp", "name", "pfid")
+			names = ("timestamp", "plyr_name", "plyr_playfabid")
 			(timestamp, name, pfid) = (res[k] for k in names)
 			self.player_list[pfid] = [name, False]
 		elif msgtype == "admjoin":
 			res = logparse.format_admjoin(match)
-			names = ("timestamp", "name", "pfid")
+			names = ("timestamp", "plyr_name", "plyr_playfabid")
 			(timestamp, name, pfid) = (res[k] for k in names)
 			if self.player_list.get(pfid):
 				#set the is_admin flag
 				self.player_list[pfid][1] = True
 		elif msgtype == "plyrleave":
 			res = logparse.format_plyrleave(match)
-			names = ("timestamp", "addr", "pfid")
+			names = ("timestamp", "plyr_addr", "plyr_playfabid")
 			(timestamp, addr, pfid) = (res[k] for k in names)
 			self.player_list.pop(pfid, None)
 
