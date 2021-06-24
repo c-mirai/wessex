@@ -80,6 +80,9 @@ def load_queue():
 	"""Reconstitutes the queue saved by save_queue"""
 	fname = config.config["fileio"]["queue"]
 	data = []
+	#create file if it doesnt exist
+	with open(fname, "a+") as fp:
+		pass
 	with open(fname, "r+") as fp:
 		strdata = fp.read()
 		#print(strdata)
