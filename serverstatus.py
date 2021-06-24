@@ -60,21 +60,29 @@ class ServerStatus:
 	async def handle_msg(self, msg, msgtype, match=None):
 		"""Handle a single log string from logparse."""
 		if msgtype == "update":
-			(timestamp, mapname, mode, playernum, reservedslots) = logparse.format_update(match)
+			res = logparse.format_update(match)
+			names = ("timestamp", "mapname", "mode", "playernum", "reservedslots")
+			(timestamp, mapname, mode, playernum, reservedslots) = (res[k] for k in names)
 			self.mapname = mapname
 			self.gamemode = mode
 			self.player_count = playernum
 			self.reserved_slots = reservedslots
 		elif msgtype == "plyrjoin":
-			(timestamp, name, pfid) = logparse.format_plyrjoin(match)
+			res = logparse.format_plyrjoin(match)
+			names = ("timestamp", "name", "pfid")
+			(timestamp, name, pfid) = (res[k] for k in names)
 			self.player_list[pfid] = [name, False]
 		elif msgtype == "admjoin":
-			(timestamp, name, pfid) = logparse.format_admjoin(match)
+			res = logparse.format_admjoin(match)
+			names = ("timestamp", "name", "pfid")
+			(timestamp, name, pfid) = (res[k] for k in names)
 			if self.player_list.get(pfid):
 				#set the is_admin flag
 				self.player_list[pfid][1] = True
 		elif msgtype == "plyrleave":
-			(timestamp, addr, pfid) = logparse.format_plyrleave(match)
+			res = logparse.format_plyrleave(match)
+			names = ("timestamp", "addr", "pfid")
+			(timestamp, addr, pfid) = (res[k] for k in names)
 			self.player_list.pop(pfid, None)
 
 	def status(self):

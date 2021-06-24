@@ -1,22 +1,23 @@
 import re
 import io
 import datetime
+from db import db
 
-timestamp_pattern 	= re.compile("\[\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3}\]")
-microsecond_pattern = re.compile(":(\d{3})\]")
-ban_pattern 		= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauPlayerController: Display: Admin (.*) \((.*)\) banned player (.*) \(Duration: (\d*), Reason: (.*)\)\r\n")
-kick_pattern 		= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauPlayerController: Display: Admin (.*) \((.*)\) kicked player (.*) \(Reason: (.*)\)\r\n")
-kickban_pattern 	= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauGameSession: Kicked player (.*) \((.*)\), reason: (.*)\r\n")
-unban_pattern 		= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauPlayerController: Display: Admin (.*) \((.*)\) unbanned player (.*)\r\n")
-chat_pattern 		= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogGameMode: Display: \((.*)\) (.*), (.*): \"(.*)\"\r\n")
-update_pattern 		= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogPlayFabAPI: Verbose: UpdateGameServer \(Map: (.*), GameMode: (.*), Players: (.*), ReservedSlots: (.*)\)\r\n")
-plyrjoin_pattern 	= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauGameSession: PlayFab authentication for (.*) \((.*)\) completed successfully\r\n")
-admjoin_pattern 	= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauGameSession: Player (.*) \((.*)\) is an admin\r\n")
-#plyrleave_pattern 	= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauGameSession: Verbose: Freed slot occupied by player (.*) \((.*)\)\r\n")
-plyrleave_pattern 	= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogNet: UChannel::Close: Sending CloseBunch. .*\[UNetConnection] RemoteAddr: (.*?),.* UniqueId: MordhauOnlineSubsystem:(.*)\r\n")
-register_pattern 	= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogPlayFabAPI: Verbose: RegisterGameServer \(Version: (.*), ServerName: (.*), Map: (.*), GameMode: (.*), Players: (.*), MaxPlayers: (.*), ReservedSlots: (.*), Region: (.*), IP: (.*), GamePort: (.*), BeaconPort: (.*), bAllowJoin: (.*), bIsPasswordProtected: (.*), Mods: (.*), OperatingSystem: (.*)\)\r\n")
-mute_pattern 		= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauPlayerController: Display: Admin (.*) \((.*)\) muted player (.*) \(Duration: (.*)\)\r\n")
-unmute_pattern		= re.compile("\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauPlayerController: Display: Admin (.*) \((.*)\) unmuted player (.*)\r\n")
+timestamp_pattern 	= re.compile(r"\[\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3}\]")
+microsecond_pattern = re.compile(r":(\d{3})\]")
+ban_pattern 		= re.compile(r"\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauPlayerController: Display: Admin (.*) \((.*)\) banned player (.*) \(Duration: (\d*), Reason: (.*)\)\r\n")
+kick_pattern 		= re.compile(r"\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauPlayerController: Display: Admin (.*) \((.*)\) kicked player (.*) \(Reason: (.*)\)\r\n")
+kickban_pattern 	= re.compile(r"\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauGameSession: Kicked player (.*) \((.*)\), reason: (.*)\r\n")
+unban_pattern 		= re.compile(r"\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauPlayerController: Display: Admin (.*) \((.*)\) unbanned player (.*)\r\n")
+chat_pattern 		= re.compile(r"\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogGameMode: Display: \((.*)\) (.*), (.*): \"(.*)\"\r\n")
+update_pattern 		= re.compile(r"\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogPlayFabAPI: Verbose: UpdateGameServer \(Map: (.*), GameMode: (.*), Players: (.*), ReservedSlots: (.*)\)\r\n")
+plyrjoin_pattern 	= re.compile(r"\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauGameSession: PlayFab authentication for (.*) \((.*)\) completed successfully\r\n")
+admjoin_pattern 	= re.compile(r"\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauGameSession: Player (.*) \((.*)\) is an admin\r\n")
+#plyrleave_pattern 	= re.compile(r"\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauGameSession: Verbose: Freed slot occupied by player (.*) \((.*)\)\r\n")
+plyrleave_pattern 	= re.compile(r"\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogNet: UChannel::Close: Sending CloseBunch. .*\[UNetConnection] RemoteAddr: (.*?),.* UniqueId: MordhauOnlineSubsystem:(.*)\r\n")
+register_pattern 	= re.compile(r"\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogPlayFabAPI: Verbose: RegisterGameServer \(Version: (.*), ServerName: (.*), Map: (.*), GameMode: (.*), Players: (.*), MaxPlayers: (.*), ReservedSlots: (.*), Region: (.*), IP: (.*), GamePort: (.*), BeaconPort: (.*), bAllowJoin: (.*), bIsPasswordProtected: (.*), Mods: (.*), OperatingSystem: (.*)\)\r\n")
+mute_pattern 		= re.compile(r"\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauPlayerController: Display: Admin (.*) \((.*)\) muted player (.*) \(Duration: (.*)\)\r\n")
+unmute_pattern		= re.compile(r"\[(\d{4}\.\d\d\.\d\d-\d\d\.\d\d\.\d\d:\d{3})\]\[.{0,4}\]LogMordhauPlayerController: Display: Admin (.*) \((.*)\) unmuted player (.*)\r\n")
 
 #calculates the novel part of the new log file
 def log_diff(old_data, data):
@@ -52,69 +53,85 @@ def timestamp_to_datetime(timestamp):
 #tries to associate a player name with a playfabid
 #certain playernames or log truncation can cause this to return incorrect results
 def guess_name(data, playfabid):
-	guessname_pattern = re.compile("(P|p)layer (.*) \({}\)".format(playfabid))
+	guessname_pattern = re.compile(r"(P|p)layer (.*) \({}\)".format(playfabid))
 	match = guessname_pattern.search(data)
 	if match:
 		return match.group(2)
 	return ""
 
 def format_ban(match):
-	timestamp	 		= match.group(1)
-	adm_name 			= match.group(2)
-	adm_playfabid 		= match.group(3)
-	plyr_playfabid 		= match.group(4)
-	duration 			= match.group(5)
-	reason				= match.group(6)
-	return (timestamp, adm_name, adm_playfabid, plyr_playfabid, duration, reason)
+	data = {
+		"timestamp"	 		: match.group(1),
+		"adm_name" 			: match.group(2),
+		"adm_playfabid" 	: match.group(3),
+		"plyr_playfabid" 	: match.group(4),
+		"duration" 			: match.group(5),
+		"reason"			: match.group(6),
+	}
+	return data
 
 def format_kick(match):
-	timestamp	 		= match.group(1)
-	adm_name 			= match.group(2)
-	adm_playfabid 		= match.group(3)
-	plyr_playfabid 		= match.group(4)
-	reason				= match.group(5)
-	return (timestamp, adm_name, adm_playfabid, plyr_playfabid, reason)
+	data = {
+		"timestamp"	 		: match.group(1),
+		"adm_name" 			: match.group(2),
+		"adm_playfabid" 	: match.group(3),
+		"plyr_playfabid" 	: match.group(4),
+		"reason"			: match.group(5),
+	}
+	return data
 
 def format_unban(match):
-	timestamp	 		= match.group(1)
-	adm_name 			= match.group(2)
-	adm_playfabid 		= match.group(3)
-	plyr_playfabid 		= match.group(4)
-	return (timestamp, adm_name, adm_playfabid, plyr_playfabid)
+	data = {
+		"timestamp"	 		: match.group(1),
+		"adm_name" 			: match.group(2),
+		"adm_playfabid" 	: match.group(3),
+		"plyr_playfabid" 	: match.group(4),
+	}
+	return data
 
 def format_chat(match):
-	timestamp	 		= match.group(1)
-	mode 				= match.group(2)
-	name 				= match.group(3)
-	plyr_playfabid		= match.group(4)
-	msg 				= match.group(5)
-	return (timestamp, mode, name, plyr_playfabid, msg)
+	data = {
+		"timestamp"	 		: match.group(1),
+		"mode" 				: match.group(2),
+		"name" 				: match.group(3),
+		"plyr_playfabid"	: match.group(4),
+		"msg" 				: match.group(5),
+	}
+	return data
 
 def format_update(match):
-	timestamp 			= match.group(1)
-	mapname				= match.group(2)
-	mode 				= match.group(3)
-	playernum 			= match.group(4)
-	reservedslots 		= match.group(5)
-	return (timestamp, mapname, mode, playernum, reservedslots)
+	data = {
+		"timestamp" 		: match.group(1),
+		"mapname"			: match.group(2),
+		"mode" 				: match.group(3),
+		"playernum" 		: match.group(4),
+		"reservedslots" 	: match.group(5),
+	}
+	return data
 
 def format_plyrjoin(match):
-	timestamp 			= match.group(1)
-	plyr_name 			= match.group(2)
-	plyr_playfabid		= match.group(3)
-	return (timestamp, plyr_name, plyr_playfabid)
+	data = {
+		"timestamp" 		: match.group(1),
+		"plyr_name" 		: match.group(2),
+		"plyr_playfabid"	: match.group(3),
+	}
+	return data
 
 def format_admjoin(match):
-	timestamp 			= match.group(1)
-	plyr_name 			= match.group(2)
-	plyr_playfabid		= match.group(3)
-	return (timestamp, plyr_name, plyr_playfabid)
+	data = {
+		"timestamp" 		: match.group(1),
+		"plyr_name" 		: match.group(2),
+		"plyr_playfabid"	: match.group(3),
+	}
+	return data
 
 def format_plyrleave(match):
-	timestamp 			= match.group(1)
-	plyr_addr 			= match.group(2)
-	plyr_playfabid		= match.group(3)
-	return (timestamp, plyr_addr, plyr_playfabid)
+	data = {
+		"timestamp" 		: match.group(1),
+		"plyr_addr" 		: match.group(2),
+		"plyr_playfabid"	: match.group(3)
+	}
+	return data
 
 def format_register(match):
 	data = {
@@ -187,6 +204,119 @@ def match_mute(line):
 
 def match_unmute(line):
 	return unmute_pattern.match(line)
+
+patterns = ['ban', 'kick', 'unban', 'chat', 'update', 'plyrjoin', 'admjoin',
+			'plyrleave', 'mute', 'unmute']
+async def handle_chat(data, full_log, msg_handler):
+	logmsg = "[{}] ({}) {} ({}): {}".format(
+		data['timestamp'],
+		data['plyr_playfabid'],
+		data['name'],
+		data['mode'],
+		data['msg'])
+	msg_handler and await msg_handler(logmsg, "chat", data)
+
+async def handle_ban(data, full_log, msg_handler):
+	name_guess = guess_name(full_log, data['plyr_playfabid'])
+	#resolve discordid from playfabid
+	adm_discordid = await db.get_discordid_from_playfabid(data['adm_playfabid'])
+	adm_mention = adm_discordid and f'<@{adm_discordid}>' or ''
+	logmsg = "[{}] {} {} ({}) banned {} ({}) (Length: {}, Reason: {}) ".format(
+		data['timestamp'],
+		adm_mention,
+		data['adm_name'],
+		data['adm_playfabid'],
+		name_guess,
+		data['plyr_playfabid'],
+		data['duration'],
+		data['reason'])
+	msg_handler and await msg_handler(logmsg, "ban", data)
+
+async def handle_kick(data, full_log, msg_handler):
+	name_guess = guess_name(full_log, data['plyr_playfabid'])
+	adm_discordid = await db.get_discordid_from_playfabid(data['adm_playfabid'])
+	adm_mention = adm_discordid and f"<@{adm_discordid}>" or ''
+	logmsg = "[{}] {} {} ({}) kicked {} ({}) (Reason: {})".format(
+		data['timestamp'],
+		adm_mention,
+		data['adm_name'],
+		data['adm_playfabid'],
+		name_guess,
+		data['plyr_playfabid'],
+		data['reason'])
+	msg_handler and await msg_handler(logmsg, "kick", data)
+
+async def handle_unban(data, full_log, msg_handler):
+	name_guess = guess_name(full_log, data['plyr_playfabid'])
+	adm_discordid = await db.get_discordid_from_playfabid(data['adm_playfabid'])
+	adm_mention = adm_discordid and f"<@{adm_discordid}>" or ''
+	logmsg = "[{}] {} {} ({}) unbanned {} ({})".format(
+		data['timestamp'],
+		adm_mention,
+		data['adm_name'],
+		data['adm_playfabid'],
+		name_guess,
+		data['plyr_playfabid'])
+	msg_handler and await msg_handler(logmsg, "unban", data)
+
+async def handle_update(data, full_log, msg_handler):
+	logmsg = ""
+	msg_handler and await msg_handler(logmsg, "update", data)
+
+async def handle_plyrjoin(data, full_log, msg_handler):
+	logmsg = ""
+	msg_handler and await msg_handler(logmsg, "plyrjoin", data)
+
+async def handle_admjoin(data, full_log, msg_handler):
+	logmsg = ""
+	msg_handler and await msg_handler(logmsg, "admjoin", data)
+
+async def handle_plyrleave(data, full_log, msg_handler):
+	logmsg = ""
+	msg_handler and await msg_handler(logmsg, "plyrleave", data)
+
+async def handle_mute(data, full_log, msg_handler):
+	name_guess = guess_name(full_log, res["plyr_playfabid"])
+	adm_discordid = await db.get_discordid_from_playfabid(res["adm_playfabid"])
+	adm_mention = adm_discordid and f"<@{adm_discordid}>" or ''
+	logmsg = (f"[{res['timestamp']}]"
+				f"{adm_mention} {res['adm_name']} ({res['adm_playfabid']})"
+				f"muted {name_guess} ({res['plyr_playfabid']})"
+				f"(Duration: {res['duration']})")
+	msg_handler and await msg_handler(logmsg, "mute", data)
+
+async def handle_unmute(data, full_log, msg_handler):
+	name_guess = guess_name(full_log, res["plyr_playfabid"])
+	adm_discordid = await db.get_discordid_from_playfabid(res["adm_playfabid"])
+	adm_mention = adm_discordid and f"<@{adm_discordid}>" or ''
+	logmsg = (f"[{res['timestamp']}] {adm_mention} {res['adm_name']}"
+	 			f"({res['adm_playfabid']}) unmuted"
+	 			f"{name_guess} ({res['plyr_playfabid']})")
+	msg_handler and await msg_handler(logmsg, "mute", data)
+
+async def handle_line(line, full_log, msg_handler):
+	"""Determine the line type, format it, and call its handler function."""
+	match = None
+	msgtype = ''
+	for pat in patterns:
+		# check against every regex pattern
+		match = globals()[f'{pat}_pattern'].match(line)
+		if match:
+			msgtype = pat
+			break
+	if not match or not msgtype: return
+	# call the corosponding format function
+	data = globals()[f'format_{msgtype}'](match)
+	# call the corrosponding handler function
+	await globals()[f'handle_{msgtype}'](data, full_log, msg_handler)
+
+async def parse_lines_n(full_log, msg_handler=None):
+	"""Loop through every line in full_log and call handle_line on it."""
+	buf = io.StringIO(full_log)
+	line = "True"
+	while(line):
+		line = buf.readline()
+		await handle_line(line, full_log, msg_handler)
 
 async def parse_lines(data, db, callback=None, printing=False):
 	"""loops through every line in the log and determines its type, formats the log msg then calls callback on it
