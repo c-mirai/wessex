@@ -6,7 +6,7 @@ import config
 def create_if_not_created(fname):
 	"""Create fname if not created."""
 
-	with open(fname, 'w+') as fp:
+	with open(fname, 'a+') as fp:
 		pass
 
 #updates file and returns the old data
