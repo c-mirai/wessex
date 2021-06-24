@@ -51,6 +51,8 @@ You can run the server in bash with
 python3 main.py & disown
 ```
 
+You'll need to resolve several dependencies by installing with pip.
+
 ### Getting @ pings in discord
 
 In order to recieve pings for administrative messages, you'll need to populate `admins.json` with data. The dict key should be the admin's playfabid.
