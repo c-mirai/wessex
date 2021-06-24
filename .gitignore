@@ -3,7 +3,8 @@ Mordhau.log
 doc
 discord.log
 config/config.ini
-db
+db/*
+!db/admins.json.template
 .git-app-password
 test
 queue.json

@@ -1,0 +1,12 @@
+{
+	"ABC": {
+		"nickname": "John",
+		"discordid": "123",
+		"playfabid": "ABC"
+	},
+	"ZYZ": {
+		"nickname": "Jane",
+		"discordid": "987",
+		"playfabid": "ZYX"
+	}
+}
