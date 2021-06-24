@@ -25,6 +25,10 @@ Easily keep up with chat thanks to batching chat messages.
 
 *A single batched chat message.*
 
+## Requirements
+
+python >= 3.7
+
 ## Setup
 Rename `config.ini.template` to `config.ini` and `admins.json.template` to `admins.json`.
 
@@ -38,6 +42,12 @@ guilds=["myserver","myotherserver"]
 ```
 
 Most of the other settings don't need to be changed. `throttle` is the download speed in bytes, 20 KB/s by default. Keep this low to make sure pings won't be affected in your server.
+
+You can run the server in bash with
+
+```
+python3 main.py & disown
+```
 
 ### Getting @ pings in discord
 
