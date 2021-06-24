@@ -8,3 +8,5 @@ db
 test
 queue.json
 asyncex1.py
+wessex.db
+*.log
