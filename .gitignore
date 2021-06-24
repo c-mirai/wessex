@@ -10,3 +10,4 @@ queue.json
 asyncex1.py
 wessex.db
 *.log
+*.old
