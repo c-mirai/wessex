@@ -9,19 +9,19 @@ For servers that don't have RCON support (like gportal), this bot can read the l
 
 Track who is in the server, player count, map, and other server info.
 
-<img src="serverstatus.png" alt="Server Status" /> 
+<img src="assets/serverstatus.png" alt="Server Status" /> 
 
 ### Administrative tracking
 
 Detect bans, unbans, kicks, mutes, unmutes.
 
-<img src="bans.png" alt="bans" />
+<img src="assets/bans.png" alt="bans" />
 
 ### Chat tracking with batching
 
 Easily keep up with chat thanks to batching chat messages.
 
-<img src="chats.png" alt="chats" />
+<img src="assets/chats.png" alt="chats" />
 
 *A single batched chat message.*
 
